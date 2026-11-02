@@ -8,7 +8,7 @@ funciona con subs, subs regaladas, canjes de puntos del canal, raids y follows.
 - Pueden jugar **varios streamers a la vez**. Lo de cada canal le pasa solo a su streamer.
 - Es gratis: usa las herramientas oficiales de Twitch (EventSub).
 
-![Aviso en pantalla](capturas/01-aviso-bits.png)
+![Aviso en pantalla](docs/aviso-en-pantalla.png)
 
 ---
 
