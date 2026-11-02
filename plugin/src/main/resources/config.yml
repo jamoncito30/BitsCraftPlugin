@@ -1,0 +1,257 @@
+# BitsCraftPlugin: configuración.
+# Todo lo de aquí se puede cambiar sin recompilar: edita y usa /twitch recargar.
+# Los textos usan MiniMessage (<gold>, <bold>, etc.). Ver https://docs.advntr.dev/minimessage/format.html
+
+twitch:
+  # Client ID de la app registrada en dev.twitch.tv (cliente PÚBLICO, sin secret).
+  # No es un secreto, pero sin él nadie puede vincular su canal.
+  client-id: ""
+  # Direcciones de Twitch. NO las cambies: solo sirven para probar con la Twitch CLI en tu PC
+  # (scripts/twitch-mock.sh las apunta a 127.0.0.1).
+  url-id: https://id.twitch.tv/oauth2
+  url-api: https://api.twitch.tv/helix
+  url-eventsub: wss://eventsub.wss.twitch.tv/ws
+
+ritmo:
+  # Segundos entre el aviso en pantalla y la acción, para que el streamer y su chat lo alcancen a ver.
+  retardo-aviso-segundos: 3
+  # Mínimo de segundos entre una donación y la siguiente del mismo streamer.
+  segundos-entre-acciones: 2
+  # Máximo de donaciones que se ejecutan por minuto por streamer (las demás esperan su turno).
+  acciones-por-minuto: 20
+  # Topes por minuto de acciones pesadas, por streamer (las demás esperan su turno).
+  por-minuto:
+    tnt: 3
+    rayo: 5
+    nuke: 1
+    jefe: 2
+  # Mobs del plugin vivos al mismo tiempo por streamer. Si se llega, los nuevos no aparecen.
+  mobs-vivos-por-streamer: 30
+  # Cuántos segundos viven los mobs del plugin antes de desaparecer solos.
+  mob-vida-segundos: 300
+  jefe-vida-segundos: 600
+  # Fila guardada mientras el streamer está en pausa o desconectado.
+  cola-maxima: 50
+  cola-horas-maximas: 24
+  # Segundos de respiro al entrar al servidor o quitar la pausa antes de que siga la fila.
+  gracia-al-volver-segundos: 10
+
+# Mundos donde no pasa nada: lo que llega se guarda como si el streamer estuviera en pausa.
+mundos-excluidos: []
+
+# Lo único que la acción "quitar" puede sacar del inventario.
+quitar-permitidos: [TORCH, BREAD, COOKED_BEEF, COOKED_PORKCHOP, COOKED_CHICKEN, APPLE, CARROT, POTATO,
+  BAKED_POTATO, COBBLESTONE, DIRT, COBBLED_DEEPSLATE, NETHERRACK, OAK_PLANKS, SAND, GRAVEL]
+
+avisos:
+  # Mostrar en el juego el mensaje que la gente escribe junto a sus bits.
+  mostrar-mensaje-bits: false
+  titulo: "<light_purple><usuario>"
+  subtitulo: "<gold><detalle></gold> <gray>»</gray> <white><nombre>"
+  chat: "<dark_gray>[<dark_purple>Twitch</dark_purple>]</dark_gray> <light_purple><usuario></light_purple> <gray>→</gray> <white><streamer></white><gray>:</gray> <gold><detalle></gold> <gray>(<nombre>)</gray>"
+  chat-mensaje-bits: "<dark_gray>  “<gray><mensaje></gray>”"
+  # Para eventos que no hacen nada (raid chica, follow durante el enfriamiento).
+  chat-solo-aviso: "<dark_gray>[<dark_purple>Twitch</dark_purple>]</dark_gray> <light_purple><usuario></light_purple> <gray>→</gray> <white><streamer></white><gray>:</gray> <gold><detalle></gold>"
+  sonido: block.note_block.pling
+  anonimo: "Anónimo"
+  detalle:
+    bits: "<monto> bits"
+    sub: "se suscribió"
+    sub-regalo: "regaló <monto> subs"
+    puntos: "canjeó «<recompensa>»"
+    raid: "raid con <monto> personas"
+    follow: "te sigue"
+
+# ----------------------------------------------------------------------------------------------
+# CATÁLOGO: qué pasa con cada evento.
+# Bits, subs y raids usan escalones: se elige el escalón más alto que no pase el monto
+# (350 bits → el de 300). Cada escalón tiene un nombre (sale en el aviso) y una lista de acciones.
+#
+# Tipos de acción y sus opciones:
+#   mob        mob, cantidad, nombre, cargado (creeper), armadura (cuero|hierro|diamante), tamano (slime),
+#              enojada (abeja), distancia [min, max], por-cada / minimo / maximo (cantidad según el monto)
+#   jefe       como mob (wither, ender_dragon); vive jefe-vida-segundos; rompe-bloques (fuera de zonas protegidas)
+#   mascota    mob (wolf, parrot, fox, cat, bee...), cantidad: queda domesticado y no desaparece
+#   efecto     efecto (speed, levitation, nausea, darkness...), segundos, nivel
+#   dar        item, cantidad          quitar  item, cantidad (solo lo de quitar-permitidos)
+#   rayo       distancia, dano (true/false), fuego (true/false)
+#   tnt        cantidad, mecha-ticks (20 = 1 s), distancia, rompe-bloques
+#   nuke       lado (10 = 10×10 TNT), mecha-ticks, rompe-bloques
+#   lanzar     altura, balde (true = le pone un balde de agua en la mano)
+#   tp-azar    distancia (bloques)
+#   noche      segundos (noche solo para el streamer)
+#   sonido     sonido, volumen, tono       particulas  particula, cantidad      fuegos  cantidad
+#   comando    comando (lo corre la consola; {streamer} {usuario} {canal} {monto} {recompensa})
+#   aleatorio  opciones: lista de acciones, elige una
+# En "nombre" se puede usar {usuario}, {streamer}, {canal}, {monto} y {recompensa}.
+# ----------------------------------------------------------------------------------------------
+catalogo:
+  bits:
+    10:
+      nombre: "5 lepismas"
+      acciones:
+        - {tipo: mob, mob: silverfish, cantidad: 5, nombre: "{usuario}"}
+    50:
+      nombre: "5 zombis"
+      acciones:
+        - {tipo: mob, mob: zombie, cantidad: 5, nombre: "{usuario}"}
+    100:
+      nombre: "Esqueletos"
+      acciones:
+        - {tipo: mob, mob: skeleton, cantidad: 5, nombre: "{usuario}"}
+        - {tipo: mob, mob: stray, cantidad: 2, nombre: "{usuario}"}
+    200:
+      nombre: "5 arañas de cueva"
+      acciones:
+        - {tipo: mob, mob: cave_spider, cantidad: 5, nombre: "{usuario}"}
+    300:
+      nombre: "Zombis y slimes"
+      acciones:
+        - {tipo: mob, mob: zombie, cantidad: 3, nombre: "{usuario}"}
+        - {tipo: mob, mob: slime, cantidad: 2, tamano: 2, nombre: "{usuario}"}
+    400:
+      nombre: "¡Invocador!"
+      acciones:
+        - {tipo: mob, mob: evoker, cantidad: 1, nombre: "{usuario}"}
+        - {tipo: mob, mob: pillager, cantidad: 3, nombre: "{usuario}"}
+    500:
+      nombre: "¡Water drop!"
+      acciones:
+        - {tipo: lanzar, altura: 50, balde: true}
+    600:
+      nombre: "¡3 creepers!"
+      acciones:
+        - {tipo: mob, mob: creeper, cantidad: 3, nombre: "{usuario}"}
+    700:
+      nombre: "Horda con armadura"
+      acciones:
+        - {tipo: mob, mob: zombie, cantidad: 10, armadura: hierro, nombre: "{usuario}"}
+        - {tipo: mob, mob: witch, cantidad: 1, nombre: "{usuario}"}
+    800:
+      nombre: "¡Teletransporte!"
+      acciones:
+        - {tipo: tp-azar, distancia: 1000}
+    900:
+      nombre: "Devastadores"
+      acciones:
+        - {tipo: mob, mob: ravager, cantidad: 2, nombre: "{usuario}"}
+        - {tipo: mob, mob: vex, cantidad: 5}
+    1000:
+      nombre: "Vindicador y vex"
+      acciones:
+        - {tipo: mob, mob: vindicator, cantidad: 1, nombre: "{usuario}"}
+        - {tipo: mob, mob: vex, cantidad: 10}
+    1500:
+      nombre: "Infierno"
+      acciones:
+        - {tipo: mob, mob: wither_skeleton, cantidad: 3, nombre: "{usuario}"}
+        - {tipo: mob, mob: blaze, cantidad: 3}
+        - {tipo: mob, mob: magma_cube, cantidad: 2, tamano: 2}
+        - {tipo: mob, mob: ghast, cantidad: 2, distancia: [8, 12]}
+    2000:
+      nombre: "¡Creeper cargado + TNT!"
+      acciones:
+        - {tipo: mob, mob: creeper, cantidad: 1, cargado: true, nombre: "{usuario}"}
+        - {tipo: tnt, cantidad: 1, mecha-ticks: 80, distancia: 3, rompe-bloques: false}
+    3000:
+      nombre: "Phantoms de noche"
+      acciones:
+        - {tipo: noche, segundos: 60}
+        - {tipo: mob, mob: phantom, cantidad: 6, distancia: [6, 10], nombre: "{usuario}"}
+    4000:
+      nombre: "¡WITHER!"
+      acciones:
+        - {tipo: jefe, mob: wither, cantidad: 1, distancia: [8, 12], rompe-bloques: true, nombre: "{usuario}"}
+    5000:
+      nombre: "¡DRAGÓN DEL END!"
+      acciones:
+        - {tipo: jefe, mob: ender_dragon, cantidad: 1, distancia: [20, 30], rompe-bloques: true, nombre: "{usuario}"}
+    10000:
+      nombre: "¡NUKE!"
+      acciones:
+        - {tipo: nuke, lado: 10, mecha-ticks: 80, rompe-bloques: false}
+
+  # Subs nuevas, resubs y subs regaladas (se cuenta cuántas se regalaron de una vez).
+  subs:
+    1:
+      nombre: "Un perro"
+      acciones:
+        - {tipo: mascota, mob: wolf, cantidad: 1}
+        - {tipo: fuegos, cantidad: 1}
+    5:
+      nombre: "Perros y loro"
+      acciones:
+        - {tipo: mascota, mob: wolf, cantidad: 5}
+        - {tipo: mascota, mob: parrot, cantidad: 1}
+        - {tipo: fuegos, cantidad: 2}
+    10:
+      nombre: "Perros, abeja y loro"
+      acciones:
+        - {tipo: mascota, mob: wolf, cantidad: 10}
+        - {tipo: mascota, mob: bee, cantidad: 1}
+        - {tipo: mascota, mob: parrot, cantidad: 1}
+        - {tipo: fuegos, cantidad: 3}
+    25:
+      nombre: "¡El zoológico!"
+      acciones:
+        - {tipo: mascota, mob: wolf, cantidad: 25}
+        - {tipo: mascota, mob: bee, cantidad: 1}
+        - {tipo: mascota, mob: parrot, cantidad: 1}
+        - {tipo: mascota, mob: fox, cantidad: 1}
+        - {tipo: fuegos, cantidad: 5}
+
+  # Canjes de puntos del canal. El nombre tiene que ser igual al título de la recompensa en Twitch
+  # (no importan mayúsculas ni espacios de más).
+  puntos:
+    "Dale de comer":
+      nombre: "8 panes"
+      acciones:
+        - {tipo: dar, item: bread, cantidad: 8}
+    "Saltito":
+      nombre: "Saltito"
+      acciones:
+        - {tipo: efecto, efecto: levitation, segundos: 3, nivel: 1}
+    "Mareo":
+      nombre: "Mareo"
+      acciones:
+        - {tipo: efecto, efecto: nausea, segundos: 10, nivel: 1}
+    "Gallinas":
+      nombre: "8 gallinas"
+      acciones:
+        - {tipo: mob, mob: chicken, cantidad: 8, distancia: [2, 4]}
+    "Abeja enojada":
+      nombre: "Abejas enojadas"
+      acciones:
+        - {tipo: mob, mob: bee, cantidad: 2, enojada: true, nombre: "{usuario}"}
+    "Se fue la luz":
+      nombre: "Oscuridad"
+      acciones:
+        - {tipo: efecto, efecto: darkness, segundos: 8, nivel: 1}
+    "Sin antorchas":
+      nombre: "Sin antorchas"
+      acciones:
+        - {tipo: quitar, item: torch, cantidad: 16}
+    "Mob sorpresa":
+      nombre: "Mob sorpresa"
+      acciones:
+        - tipo: aleatorio
+          opciones:
+            - {tipo: mob, mob: creeper, cantidad: 1, nombre: "{usuario}"}
+            - {tipo: mob, mob: spider, cantidad: 1, nombre: "{usuario}"}
+            - {tipo: mob, mob: witch, cantidad: 1, nombre: "{usuario}"}
+            - {tipo: mob, mob: slime, cantidad: 1, tamano: 4, nombre: "{usuario}"}
+
+  raid:
+    # Raids con menos espectadores solo muestran el aviso.
+    minimo-espectadores: 3
+    nombre: "Horda de raid"
+    acciones:
+      - {tipo: mob, mob: zombie, por-cada: 10, minimo: 2, maximo: 15, nombre: "{usuario}"}
+
+  follow:
+    # Como mucho un efecto cada tantos segundos por streamer; los demás follows solo salen en el chat.
+    enfriamiento-segundos: 30
+    nombre: "Follow"
+    acciones:
+      - {tipo: particulas, particula: heart, cantidad: 12}
+      - {tipo: sonido, sonido: entity.player.levelup, volumen: 0.6, tono: 1.4}

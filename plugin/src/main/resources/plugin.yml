@@ -1,0 +1,21 @@
+name: BitsCraftPlugin
+version: ${version}
+main: dev.jamon.bitscraft.BitsCraftPlugin
+api-version: '1.21'
+author: jam0ncit0
+description: Conecta los canales de Twitch de los streamers con su partida (bits, subs, puntos, raids y follows).
+softdepend: [WorldGuard, GriefPrevention]
+commands:
+  twitch:
+    description: Vincular tu canal de Twitch y controlar lo que te pasa en el juego.
+    usage: /twitch [vincular|desvincular|estado|pausa|reanudar|probar|vaciar|recargar]
+    permission: bitscraft.streamer
+permissions:
+  bitscraft.streamer:
+    description: Vincular un canal de Twitch y recibir sus eventos en el juego.
+    default: op
+  bitscraft.admin:
+    description: Probar eventos, pausar o vaciar la fila de otros streamers y recargar la configuración.
+    default: op
+    children:
+      bitscraft.streamer: true

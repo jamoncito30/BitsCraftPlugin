@@ -1,0 +1,9 @@
+# Servidor local de prueba (jars, mundo, tokens de prueba): se arma con scripts/armar-servidor-prueba.sh
+servidor-prueba/
+# Archivos de otras sesiones que la app copió al mover esta carpeta (no son de este proyecto)
+_copias-otras-sesiones/
+build/
+herramientas/
+logs/
+capturas/
+cliente-prueba*/
