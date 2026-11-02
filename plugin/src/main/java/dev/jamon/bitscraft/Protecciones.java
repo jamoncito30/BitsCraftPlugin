@@ -14,9 +14,13 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.SlimeSplitEvent;
 
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Supplier;
+
 /**
  * Lo que impide que las donaciones arruinen bases o se puedan farmear: explosiones y jefes del
- * plugin no rompen bloques en zonas protegidas (ni en ningún lado si rompe-bloques es false),
+ * plugin no rompen bloques en zonas protegidas ajenas (ver {@link Rompe}),
  * los rayos no prenden fuego, los mobs no sueltan ítems ni experiencia y los fuegos artificiales
  * no hacen daño.
  */
@@ -24,10 +28,17 @@ final class Protecciones implements Listener {
 
     private final Marcas marcas;
     private final Zonas zonas;
+    private final Supplier<Set<UUID>> vinculados;
 
-    Protecciones(Marcas marcas, Zonas zonas) {
+    Protecciones(Marcas marcas, Zonas zonas, Supplier<Set<UUID>> vinculados) {
         this.marcas = marcas;
         this.zonas = zonas;
+        this.vinculados = vinculados;
+    }
+
+    /** Dueños cuyas zonas puede romper la entidad, o null si no rompe nada. */
+    private Set<UUID> permitidos(Entity e) {
+        return marcas.rompe(e).duenosPermitidos(marcas.streamer(e), vinculados.get());
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -36,10 +47,11 @@ final class Protecciones implements Listener {
         if (!marcas.marcada(origen)) {
             return;
         }
-        if (!marcas.rompe(origen)) {
+        Set<UUID> permitidos = permitidos(origen);
+        if (permitidos == null) {
             e.blockList().clear();
         } else {
-            e.blockList().removeIf(b -> zonas.protegido(b.getLocation()));
+            e.blockList().removeIf(b -> zonas.protegido(b.getLocation(), permitidos));
         }
     }
 
@@ -50,7 +62,8 @@ final class Protecciones implements Listener {
             return;
         }
         Block b = e.getBlock();
-        if (!marcas.rompe(ent) || zonas.protegido(b.getLocation())) {
+        Set<UUID> permitidos = permitidos(ent);
+        if (permitidos == null || zonas.protegido(b.getLocation(), permitidos)) {
             e.setCancelled(true);
         }
     }

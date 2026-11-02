@@ -2,7 +2,9 @@
 # Arma servidor-prueba/: Paper 26.3 oficial (fill.papermc.io, con su SHA-256), WorldGuard,
 # WorldEdit y GriefPrevention (copiados de jamon-mercado/servidor-prueba), mundo plano, dificultad
 # normal, solo en 127.0.0.1:25568, RCON local con clave al azar y una región de WorldGuard de prueba
-# ("protegida", de -20,-64,30 a 20,320,70) para ver que la TNT no rompe ahí.
+# ("protegida", de -20,-64,30 a 20,320,70, sin dueño) y otra de LONIUX ("base_loniux", de 100,-64,30
+# a 140,320,70; LONIUX en modo offline tiene el UUID 40ed09fc-…) para probar rompe-bloques: streamer.
+# Las dos permiten explosiones en WorldGuard, para que lo que se prueba sea el plugin.
 #   scripts/armar-servidor-prueba.sh --acepto-eula
 # --acepto-eula escribe eula=true (equivale a aceptar el EULA de Minecraft); sin él, edítalo a mano.
 set -euo pipefail
@@ -69,8 +71,16 @@ regions:
         min: {x: -20.0, y: -64.0, z: 30.0}
         max: {x: 20.0, y: 320.0, z: 70.0}
         members: {}
-        flags: {}
+        flags: {tnt: allow, creeper-explosion: allow, other-explosion: allow}
         owners: {}
+        priority: 0
+    base_loniux:
+        type: cuboid
+        min: {x: 100.0, y: -64.0, z: 30.0}
+        max: {x: 140.0, y: 320.0, z: 70.0}
+        members: {}
+        flags: {tnt: allow, creeper-explosion: allow, other-explosion: allow}
+        owners: {unique-ids: [40ed09fc-a5fe-3561-be93-88e09550f789]}
         priority: 0
 EOR
 echo "== Listo. Compila e instala el plugin con scripts/compilar.sh --instalar y arranca con scripts/arrancar-prueba.sh"

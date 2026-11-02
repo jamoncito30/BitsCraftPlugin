@@ -59,10 +59,18 @@ final class Avisos {
                 Placeholder.unparsed("streamer", streamer),
                 Placeholder.unparsed("monto", String.valueOf(ev.monto())),
                 Placeholder.unparsed("recompensa", ev.recompensa() == null ? "" : ev.recompensa()),
-                Placeholder.unparsed("mensaje", ev.mensaje() == null ? "" : ev.mensaje()),
+                Placeholder.unparsed("mensaje", recortar(ev.mensaje(), 120)),
                 Placeholder.unparsed("nombre", nombreEntrada == null ? "" : nombreEntrada));
         Component detalle = MM.deserialize(detalles.get(ev.tipo()), base);
         return TagResolver.resolver(base, Placeholder.component("detalle", detalle));
+    }
+
+    private static String recortar(String s, int max) {
+        if (s == null) {
+            return "";
+        }
+        String t = s.replaceAll("\\s+", " ").trim();
+        return t.length() > max ? t.substring(0, max) + "…" : t;
     }
 
     /** Aviso de algo que va a pasar: título al streamer, sonido y línea de chat para todos. */

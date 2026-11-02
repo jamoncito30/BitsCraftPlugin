@@ -44,8 +44,8 @@ quitar-permitidos: [TORCH, BREAD, COOKED_BEEF, COOKED_PORKCHOP, COOKED_CHICKEN, 
   BAKED_POTATO, COBBLESTONE, DIRT, COBBLED_DEEPSLATE, NETHERRACK, OAK_PLANKS, SAND, GRAVEL]
 
 avisos:
-  # Mostrar en el juego el mensaje que la gente escribe junto a sus bits.
-  mostrar-mensaje-bits: false
+  # Mostrar en el juego el mensaje que la gente escribe junto a sus bits (texto plano, máximo 120 letras).
+  mostrar-mensaje-bits: true
   titulo: "<light_purple><usuario>"
   subtitulo: "<gold><detalle></gold> <gray>»</gray> <white><nombre>"
   chat: "<dark_gray>[<dark_purple>Twitch</dark_purple>]</dark_gray> <light_purple><usuario></light_purple> <gray>→</gray> <white><streamer></white><gray>:</gray> <gold><detalle></gold> <gray>(<nombre>)</gray>"
@@ -69,14 +69,19 @@ avisos:
 #
 # Tipos de acción y sus opciones:
 #   mob        mob, cantidad, nombre, cargado (creeper), armadura (cuero|hierro|diamante), tamano (slime),
-#              enojada (abeja), distancia [min, max], por-cada / minimo / maximo (cantidad según el monto)
-#   jefe       como mob (wither, ender_dragon); vive jefe-vida-segundos; rompe-bloques (fuera de zonas protegidas)
+#              enojada (abeja), distancia [min, max], por-cada / minimo / maximo (cantidad según el monto),
+#              vida-segundos (cuánto vive; si no, ritmo.mob-vida-segundos). El warden aparece enojado con el streamer.
+#   jefe       como mob (wither, ender_dragon); vive jefe-vida-segundos; rompe-bloques (ver abajo)
 #   mascota    mob (wolf, parrot, fox, cat, bee...), cantidad: queda domesticado y no desaparece
 #   efecto     efecto (speed, levitation, nausea, darkness...), segundos, nivel
 #   dar        item, cantidad          quitar  item, cantidad (solo lo de quitar-permitidos)
 #   rayo       distancia, dano (true/false), fuego (true/false)
 #   tnt        cantidad, mecha-ticks (20 = 1 s), distancia, rompe-bloques
 #   nuke       lado (10 = 10×10 TNT), mecha-ticks, rompe-bloques
+#   rompe-bloques (tnt, nuke, mob, jefe): false = nunca; true = fuera de zonas protegidas;
+#              streamer = además en las zonas del streamer al que le donaron;
+#              streamers = además en las zonas de cualquier streamer vinculado.
+#              Una zona es de alguien si es el dueño del claim (GriefPrevention) o de la región (WorldGuard).
 #   lanzar     altura, balde (true = le pone un balde de agua en la mano)
 #   tp-azar    distancia (bloques)
 #   noche      segundos (noche solo para el streamer)
@@ -115,9 +120,10 @@ catalogo:
         - {tipo: mob, mob: evoker, cantidad: 1, nombre: "{usuario}"}
         - {tipo: mob, mob: pillager, cantidad: 3, nombre: "{usuario}"}
     500:
+      # LONIUX: "que cada quien tenga los recursos para sobrevivir al water" → sin balde.
       nombre: "¡Water drop!"
       acciones:
-        - {tipo: lanzar, altura: 50, balde: true}
+        - {tipo: lanzar, altura: 50, balde: false}
     600:
       nombre: "¡3 creepers!"
       acciones:
@@ -154,24 +160,26 @@ catalogo:
         - {tipo: mob, mob: creeper, cantidad: 1, cargado: true, nombre: "{usuario}"}
         - {tipo: tnt, cantidad: 1, mecha-ticks: 80, distancia: 3, rompe-bloques: false}
     3000:
-      nombre: "Phantoms de noche"
+      # LONIUX pidió un warden en vez de los phantoms con noche.
+      nombre: "¡WARDEN!"
       acciones:
-        - {tipo: noche, segundos: 60}
-        - {tipo: mob, mob: phantom, cantidad: 6, distancia: [6, 10], nombre: "{usuario}"}
+        - {tipo: mob, mob: warden, cantidad: 1, distancia: [5, 8], vida-segundos: 300, nombre: "{usuario}"}
     4000:
       nombre: "¡WITHER!"
       acciones:
-        - {tipo: jefe, mob: wither, cantidad: 1, distancia: [8, 12], rompe-bloques: true, nombre: "{usuario}"}
+        # LONIUX: "si se puede que rompa solo lo nuestro" → afuera y en las zonas de los streamers (falta confirmar).
+        - {tipo: jefe, mob: wither, cantidad: 1, distancia: [8, 12], rompe-bloques: streamers, nombre: "{usuario}"}
     5000:
       nombre: "¡DRAGÓN DEL END!"
       acciones:
-        - {tipo: jefe, mob: ender_dragon, cantidad: 1, distancia: [20, 30], rompe-bloques: true, nombre: "{usuario}"}
+        - {tipo: jefe, mob: ender_dragon, cantidad: 1, distancia: [20, 30], rompe-bloques: streamers, nombre: "{usuario}"}
     10000:
       nombre: "¡NUKE!"
       acciones:
         - {tipo: nuke, lado: 10, mecha-ticks: 80, rompe-bloques: false}
 
   # Subs nuevas, resubs y subs regaladas (se cuenta cuántas se regalaron de una vez).
+  # Las mascotas se quedan para siempre (LONIUX: "los animales están bien que se queden").
   subs:
     1:
       nombre: "Un perro"
@@ -195,6 +203,7 @@ catalogo:
       nombre: "¡El zoológico!"
       acciones:
         - {tipo: mascota, mob: wolf, cantidad: 25}
+        - {tipo: mascota, mob: panda, cantidad: 1}
         - {tipo: mascota, mob: bee, cantidad: 1}
         - {tipo: mascota, mob: parrot, cantidad: 1}
         - {tipo: mascota, mob: fox, cantidad: 1}
@@ -231,6 +240,18 @@ catalogo:
       nombre: "Sin antorchas"
       acciones:
         - {tipo: quitar, item: torch, cantidad: 16}
+    "Panda":
+      nombre: "Un panda"
+      acciones:
+        - {tipo: mascota, mob: panda, cantidad: 1}
+    "Bicho raro":
+      nombre: "Bicho raro"
+      acciones:
+        - tipo: aleatorio
+          opciones:
+            - {tipo: mob, mob: breeze, cantidad: 1, nombre: "{usuario}"}
+            - {tipo: mob, mob: bogged, cantidad: 2, nombre: "{usuario}"}
+            - {tipo: mob, mob: creaking, cantidad: 1, nombre: "{usuario}"}
     "Mob sorpresa":
       nombre: "Mob sorpresa"
       acciones:

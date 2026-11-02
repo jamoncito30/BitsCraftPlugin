@@ -60,7 +60,7 @@ public final class BitsCraftPlugin extends JavaPlugin implements Listener {
         aplicarConfig();
         streamers.iniciar();
 
-        getServer().getPluginManager().registerEvents(new Protecciones(marcas, Zonas.cargar(this, getLogger())), this);
+        getServer().getPluginManager().registerEvents(new Protecciones(marcas, Zonas.cargar(this, getLogger()), streamers::vinculados), this);
         getServer().getPluginManager().registerEvents(this, this);
         PluginCommand cmd = getCommand("twitch");
         if (cmd != null) {

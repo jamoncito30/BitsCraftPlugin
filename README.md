@@ -119,7 +119,7 @@ Tipos de acción:
 | `mascota` | `mob`, `cantidad`: queda domesticado por el streamer y no desaparece | `{tipo: mascota, mob: wolf, cantidad: 5}` |
 | `efecto` | `efecto`, `segundos`, `nivel` | `{tipo: efecto, efecto: levitation, segundos: 3}` |
 | `dar` / `quitar` | `item`, `cantidad` (`quitar` solo saca lo de `quitar-permitidos`) | `{tipo: dar, item: golden_apple, cantidad: 1}` |
-| `tnt` | `cantidad`, `mecha-ticks` (20 = 1 s), `distancia`, `rompe-bloques` | `{tipo: tnt, mecha-ticks: 80}` |
+| `tnt` | `cantidad`, `mecha-ticks` (20 = 1 s), `distancia`, `rompe-bloques` (ver abajo) | `{tipo: tnt, mecha-ticks: 80}` |
 | `nuke` | `lado` (10 = 10×10 TNT), `mecha-ticks`, `rompe-bloques` | `{tipo: nuke, lado: 10}` |
 | `rayo` | `distancia`, `dano`, `fuego` | `{tipo: rayo, distancia: 3}` |
 | `lanzar` | `altura`, `balde` (balde de agua en la mano) | `{tipo: lanzar, altura: 50, balde: true}` |
@@ -128,6 +128,20 @@ Tipos de acción:
 | `sonido` / `particulas` / `fuegos` | `sonido`, `particula`, `cantidad` | `{tipo: fuegos, cantidad: 3}` |
 | `comando` | `comando`, lo corre la consola | `{tipo: comando, comando: "say {usuario} salvó a {streamer}"}` |
 | `aleatorio` | `opciones`: lista de acciones, elige una | ver «Mob sorpresa» en el config |
+
+**`rompe-bloques`** (en `tnt`, `nuke`, `mob` y `jefe`) decide dónde pueden romper bloques:
+
+| Valor | Dónde rompe |
+|---|---|
+| `false` | En ningún lado (por defecto en la TNT y la nuke) |
+| `true` | Solo fuera de las zonas protegidas (por defecto en los creepers) |
+| `streamer` | Fuera de las zonas, y también en las zonas del streamer al que le donaron |
+| `streamers` | Fuera de las zonas, y también en las zonas de cualquier streamer vinculado (lo que tienen el wither y el dragón) |
+
+Una zona es «de alguien» si es el dueño del claim de GriefPrevention o de la región de WorldGuard.
+Con `streamer` o `streamers`, el dueño además tiene que permitir explosiones en su zona, porque esos
+plugins también las frenan: en GriefPrevention, `/claimexplosions` parado en el claim; en WorldGuard,
+`/rg flag <región> tnt allow`, `creeper-explosion allow` y `other-explosion allow`.
 
 En `nombre` y `comando` se puede usar `{usuario}`, `{streamer}`, `{canal}`, `{monto}` y
 `{recompensa}`. Lo que viene de Twitch se limpia (solo letras, números y `_`) para que nadie pueda
@@ -154,11 +168,12 @@ En la sección `ritmo` de `config.yml`:
 Además:
 - Los mobs de las donaciones **no sueltan ítems ni experiencia**, y los slimes no se dividen (no se
   pueden farmear).
-- Las explosiones y los jefes **no rompen bloques en zonas protegidas** (regiones de WorldGuard,
-  claims de GriefPrevention). Fuera de ellas decide `rompe-bloques`.
+- Las explosiones y los jefes **no rompen bloques en zonas protegidas ajenas** (regiones de
+  WorldGuard, claims de GriefPrevention). Ver `rompe-bloques` arriba.
 - `mundos-excluidos`: en esos mundos no pasa nada y lo que llega se guarda.
-- El mensaje que la gente escribe con sus bits no sale en el juego, salvo con
-  `avisos.mostrar-mensaje-bits: true`.
+- El mensaje que la gente escribe con sus bits sale en el chat del juego como texto plano (máximo
+  120 letras). Para ocultarlo: `avisos.mostrar-mensaje-bits: false`.
+- Las mascotas de las subs (perros, loro, abeja, zorro, panda) se quedan para siempre.
 
 ### Ojo con GriefPrevention
 

@@ -1,9 +1,23 @@
-# Qué se probó (0.1.0, 2026-11-02)
+# Qué se probó
+
+## 0.2.0 (2026-11-02): respuestas de LONIUX
+
+- JUnit: 27 pruebas (2 nuevas de `rompe-bloques`).
+- `scripts/probar-catalogo.py`: **37 de 37** (water drop sin balde, warden a los 3.000 bits, panda en
+  las subs de 25 y en el canje «Panda», canje «Bicho raro»).
+- `scripts/probar-catalogo.py zonas`: creepers dentro de la región sin dueño → 0 bloques; fuera → 85;
+  TNT con `rompe-bloques: streamer` en la región de LONIUX → 93; en la región sin dueño → 0
+  (las dos regiones con explosiones permitidas en WorldGuard, para que decida el plugin).
+- Encontrado: WorldGuard frena las explosiones en cualquier región si no tiene `tnt`/`creeper-explosion`/
+  `other-explosion allow`, y GriefPrevention en los claims sin `/claimexplosions`. Con `streamer(s)`, el
+  dueño de la zona tiene que permitirlas.
+
+## 0.1.0 (2026-11-02)
 
 Servidor de prueba: Paper 26.3 build 237 (SHA-256 `57d8774b…a56e`), WorldGuard 7.0.20,
 WorldEdit 7.4.6, GriefPrevention 16.18.7, Java 25.0.4. Clientes vanilla 26.3 «LONIUX» y «LionGGZ».
 
-## JUnit (25 pruebas, `scripts/compilar.sh`)
+### JUnit (25 pruebas, `scripts/compilar.sh`)
 
 - **Catálogo real de `config.yml`:** escalones de bits (9 → nada, 10, 49, 50, 350, 599, 3000, 4999,
   9999, 50000), subs y regalos (1, 7, 10, 100), recompensas sin importar mayúsculas ni espacios,
@@ -20,7 +34,7 @@ WorldEdit 7.4.6, GriefPrevention 16.18.7, Java 25.0.4. Clientes vanilla 26.3 «L
   evento repetido descartado, `session_reconnect` sin volver a suscribirse, reconexión sola si se
   corta, y que ningún mensaje de log tenga tokens.
 
-## En el servidor
+### En el servidor
 
 - `scripts/probar-catalogo.py`: **35 de 35** entradas del catálogo hacen lo esperado (cantidad y tipo
   de mobs, water drop con balde, tp-azar a ~1.000 bloques, efectos, panes, antorchas quitadas,
@@ -36,7 +50,7 @@ WorldEdit 7.4.6, GriefPrevention 16.18.7, Java 25.0.4. Clientes vanilla 26.3 «L
 - Fila en pausa con 3 eventos → servidor reiniciado → al entrar avisa «Tienes 3 evento(s)… en pausa»
   → `/twitch reanudar` → a los 10 s salen los 3, en orden.
 
-## Encontrado en el camino (no es del plugin)
+### Encontrado en el camino (no es del plugin)
 
 - GriefPrevention en modo **Creative** (lo pone solo si el servidor arranca en creativo) borra todos los
   mobs fuera de los claims, incluso los de `/summon`.
@@ -44,7 +58,7 @@ WorldEdit 7.4.6, GriefPrevention 16.18.7, Java 25.0.4. Clientes vanilla 26.3 «L
   ningún lado. Se apagó en el servidor de prueba para probar las zonas del plugin.
 - En el mundo plano aparecen slimes solos; el script de prueba apaga `spawn_mobs` y `spawn_monsters`.
 
-## Falta
+### Falta
 
 - **Vincular con Twitch de verdad** (`/twitch vincular` con una app real): necesita el Client ID de
   la app registrada en dev.twitch.tv.

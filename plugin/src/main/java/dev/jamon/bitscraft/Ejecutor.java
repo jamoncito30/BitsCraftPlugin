@@ -26,6 +26,7 @@ import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Slime;
 import org.bukkit.entity.TNTPrimed;
+import org.bukkit.entity.Warden;
 import org.bukkit.entity.Tameable;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.inventory.EntityEquipment;
@@ -200,7 +201,7 @@ final class Ejecutor {
         String nombre = a.texto("nombre", "");
         long vida = clase == Marcas.Clase.JEFE ? ritmo.jefeVidaMs() : ritmo.mobVidaMs();
         vida = a.opciones().containsKey("vida-segundos") ? a.entero("vida-segundos", 300) * 1000L : vida;
-        boolean rompe = a.si("rompe-bloques", tipo == EntityType.CREEPER);
+        Rompe rompe = Rompe.desde(a.opciones().get("rompe-bloques"), tipo == EntityType.CREEPER ? Rompe.FUERA_DE_ZONAS : Rompe.NO);
         for (int i = 0; i < cantidad; i++) {
             if (clase != Marcas.Clase.MASCOTA && marcas.vivos(p.getUniqueId()) >= ritmo.mobsVivos()) {
                 r.mobsSaltados += cantidad - i;
@@ -225,6 +226,9 @@ final class Ejecutor {
                 }
                 if (e instanceof EnderDragon d) {
                     d.setPhase(EnderDragon.Phase.CIRCLING);
+                }
+                if (e instanceof Warden w) {
+                    w.setAnger(p, 150);
                 }
             }
         }
@@ -320,7 +324,7 @@ final class Ejecutor {
         Location l = d <= 0 ? p.getLocation() : LugarSeguro.cerca(p.getLocation(), d, d, false);
         if (a.si("dano", true)) {
             Entity rayo = p.getWorld().strikeLightning(l);
-            marcas.marcar(rayo, p.getUniqueId(), Marcas.Clase.EFECTO, false, a.si("fuego", false), 0, reloj.getAsLong());
+            marcas.marcar(rayo, p.getUniqueId(), Marcas.Clase.EFECTO, Rompe.NO, a.si("fuego", false), 0, reloj.getAsLong());
         } else {
             p.getWorld().strikeLightningEffect(l);
         }
@@ -330,11 +334,11 @@ final class Ejecutor {
         int d = a.entero("distancia", 3);
         for (int i = 0; i < Math.max(1, a.entero("cantidad", 1)); i++) {
             Location l = d <= 0 ? p.getLocation() : LugarSeguro.cerca(p.getLocation(), d, d + 1, false);
-            prenderTnt(p, l, a.entero("mecha-ticks", 80), a.si("rompe-bloques", false));
+            prenderTnt(p, l, a.entero("mecha-ticks", 80), Rompe.desde(a.opciones().get("rompe-bloques"), Rompe.NO));
         }
     }
 
-    private void prenderTnt(Player p, Location l, int mecha, boolean rompe) {
+    private void prenderTnt(Player p, Location l, int mecha, Rompe rompe) {
         p.getWorld().spawn(l, TNTPrimed.class, t -> {
             t.setFuseTicks(Math.max(10, mecha));
             marcas.marcar(t, p.getUniqueId(), Marcas.Clase.EXPLOSIVO, rompe, false, 0, reloj.getAsLong());
@@ -344,7 +348,7 @@ final class Ejecutor {
     private void nuke(Player p, Accion a) {
         int lado = Math.max(1, Math.min(30, a.entero("lado", 10)));
         int mecha = a.entero("mecha-ticks", 80);
-        boolean rompe = a.si("rompe-bloques", false);
+        Rompe rompe = Rompe.desde(a.opciones().get("rompe-bloques"), Rompe.NO);
         Location c = p.getLocation();
         World w = p.getWorld();
         double inicio = -(lado - 1) / 2.0;
@@ -480,7 +484,7 @@ final class Ejecutor {
                         .flicker(r.nextBoolean()).trail(true).build());
                 meta.setPower(1);
                 f.setFireworkMeta(meta);
-                marcas.marcar(f, p.getUniqueId(), Marcas.Clase.EFECTO, false, false, 0, reloj.getAsLong());
+                marcas.marcar(f, p.getUniqueId(), Marcas.Clase.EFECTO, Rompe.NO, false, 0, reloj.getAsLong());
             });
         }
     }

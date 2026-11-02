@@ -40,11 +40,11 @@ final class Marcas {
     }
 
     /** Marca la entidad. Los mobs y jefes se siguen para borrarlos a los {@code vidaMs}. */
-    void marcar(Entity e, UUID streamer, Clase clase, boolean rompe, boolean fuego, long vidaMs, long ahora) {
+    void marcar(Entity e, UUID streamer, Clase clase, Rompe rompe, boolean fuego, long vidaMs, long ahora) {
         PersistentDataContainer pdc = e.getPersistentDataContainer();
         pdc.set(claveStreamer, PersistentDataType.STRING, streamer.toString());
         pdc.set(claveClase, PersistentDataType.STRING, clase.name());
-        pdc.set(claveRompe, PersistentDataType.BOOLEAN, rompe);
+        pdc.set(claveRompe, PersistentDataType.STRING, rompe.name());
         pdc.set(claveFuego, PersistentDataType.BOOLEAN, fuego);
         if (clase == Clase.MOB || clase == Clase.JEFE) {
             seguidas.put(e.getUniqueId(), new Seguida(streamer, ahora + vidaMs));
@@ -75,8 +75,22 @@ final class Marcas {
         }
     }
 
-    boolean rompe(Entity e) {
-        return Boolean.TRUE.equals(e.getPersistentDataContainer().get(claveRompe, PersistentDataType.BOOLEAN));
+    Rompe rompe(Entity e) {
+        String r = e.getPersistentDataContainer().get(claveRompe, PersistentDataType.STRING);
+        try {
+            return r == null ? Rompe.NO : Rompe.valueOf(r);
+        } catch (IllegalArgumentException ex) {
+            return Rompe.NO;
+        }
+    }
+
+    UUID streamer(Entity e) {
+        String s = e.getPersistentDataContainer().get(claveStreamer, PersistentDataType.STRING);
+        try {
+            return s == null ? null : UUID.fromString(s);
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
     }
 
     boolean fuego(Entity e) {

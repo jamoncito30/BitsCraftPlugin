@@ -5,7 +5,7 @@
 Plugin de Paper que conecta los canales de Twitch de los streamers con lo que les pasa en Minecraft.
 Ejemplo: alguien dona 100 bits en el canal de LONIUX y aparece un creeper junto a LONIUX.
 
-- **Estado:** etapa 0 cerrada el 2026-11-02. Plan de implementación aprobado el 2026-11-02 en `PLAN-IMPLEMENTACION.md`. **0.1.0 construida el 2026-11-02** (E1–E5 en código; ver §12 y `docs/PRUEBAS.md`). El **catálogo de la §4 es una propuesta** que el
+- **Estado:** etapa 0 cerrada el 2026-11-02. Plan de implementación aprobado el 2026-11-02 en `PLAN-IMPLEMENTACION.md`. **0.2.0 el 2026-11-02** con las respuestas de LONIUX (§13; falta LionGGZ). Ver §12 y `docs/PRUEBAS.md`. El **catálogo de la §4 es una propuesta** que el
   usuario les pasa a LONIUX y LionGGZ; lo que digan se cambia en `config.yml`, sin tocar código.
 - **Para quién:** el servidor de contenido de los creadores. **No se despliega en el Servidor Jamón.**
 - **Regla de seguridad:** nunca se leen, muestran ni escriben en logs los tokens. El plugin no usa
@@ -326,3 +326,23 @@ categorías; se cambian en `config.yml` sin recompilar).
   Twitch CLI (no se pudo bajar y ejecutar desde la sesión).
 - **Para el servidor de los creadores:** GriefPrevention en modo Creative borra los mobs, y su
   `BlockSurfaceCreeperExplosions` impide los cráteres (ver README, «Ojo con GriefPrevention»).
+
+---
+
+## 13. Respuestas de LONIUX (2026-11-02, preliminares: falta LionGGZ) → 0.2.0
+
+| # | Pregunta | Respuesta (Discord) | Cómo quedó en `config.yml` |
+|---|---|---|---|
+| 1 | Water drop: ¿balde? | "Que cada quien tenga los recursos para sobrevivir al water" | `balde: false` |
+| 2 | Wither y dragón: ¿rompen? | "Si se puede que rompa solo lo nuestro" | `rompe-bloques: streamers` (afuera y en zonas de cualquier streamer vinculado). **Falta confirmar** si es eso o `streamer` (solo las zonas del afectado) |
+| 3 | Nuke 10×10 | "Si está bien intentar" | Sin cambios (`lado: 10`) |
+| 4 | 3.000 bits | "Hace falta un warden es castroso" | Warden (enojado con el streamer, vive 5 min) en vez de phantoms con noche |
+| 5 | Perros de subs | "Los animales están bien que se queden" | Sin cambios (las mascotas no desaparecen) |
+| 6 | Mensaje de bits | "Like" | `mostrar-mensaje-bits: true` (texto plano, máximo 120 letras) |
+| 7 | 3 s de aviso | "Like" | Sin cambios |
+| 8 | Recompensas | "Algún panda en puestos o subs y un warden o un bicho nuevo que valga la pena" | Panda en las subs de 25 y canje «Panda» (sugerido 3.000 puntos); canje «Bicho raro» (breeze, 2 bogged o creaking; sugerido 6.000) |
+
+Código nuevo para expresarlo: `rompe-bloques` acepta `false`, `true`, `streamer` y `streamers` (clase
+`Rompe`; las zonas miran al dueño del claim o de la región); el warden aparece enojado con el streamer.
+Probado en `docs/PRUEBAS.md`. Ojo: con `streamer(s)`, GriefPrevention y WorldGuard también frenan las
+explosiones en las zonas, así que el dueño tiene que permitirlas (`/claimexplosions`, flags de WG).

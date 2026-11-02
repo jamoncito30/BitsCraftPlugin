@@ -579,6 +579,11 @@ final class Streamers {
         return l;
     }
 
+    /** Jugadores con un canal vinculado. */
+    Set<UUID> vinculados() {
+        return Set.copyOf(vinculos.keySet());
+    }
+
     /** Nombres de los streamers vinculados (para autocompletar). */
     List<String> nombresVinculados() {
         return vinculos.keySet().stream().map(Streamers::nombre).toList();

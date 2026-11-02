@@ -21,7 +21,7 @@ CASOS = [
     ("bits 200", "bits 200", {"cave_spider": 5}),
     ("bits 300", "bits 300", {"zombie": 3, "slime": 2}),
     ("bits 400", "bits 400", {"evoker": 1, "pillager": 3}),
-    ("bits 500 water drop", "bits 500", {}, "lanzado"),
+    ("bits 500 water drop", "bits 500", {}, "lanzado-sin-balde"),
     ("bits 600", "bits 600", {"creeper": 3}),
     ("bits 700", "bits 700", {"zombie": 10, "witch": 1}),
     ("bits 800 tp-azar", "bits 800", {}, "lejos"),
@@ -29,7 +29,7 @@ CASOS = [
     ("bits 1000", "bits 1000", {"vindicator": 1, "vex": 10}),
     ("bits 1500", "bits 1500", {"wither_skeleton": 3, "blaze": 3, "magma_cube": 2, "ghast": 2}),
     ("bits 2000", "bits 2000", {"creeper": 1, "tnt": 1}),
-    ("bits 3000", "bits 3000", {"phantom": 6}),
+    ("bits 3000 warden", "bits 3000", {"warden": 1}),
     ("bits 4000", "bits 4000", {"wither": 1}),
     ("bits 5000", "bits 5000", {"ender_dragon": 1}),
     ("bits 10000 nuke", "bits 10000", {"tnt": 100}),
@@ -37,7 +37,7 @@ CASOS = [
     ("subs 1", "sub 1", {"wolf": 1}),
     ("subs 7 regaladas", "sub-regalo 7", {"wolf": 5, "parrot": 1}),
     ("subs 10", "sub-regalo 10", {"wolf": 10, "bee": 1, "parrot": 1}),
-    ("subs 25", "sub-regalo 25", {"wolf": 25, "bee": 1, "parrot": 1, "fox": 1}),
+    ("subs 25", "sub-regalo 25", {"wolf": 25, "bee": 1, "parrot": 1, "fox": 1, "panda": 1}),
     ("puntos Dale de comer", "puntos Dale de comer", {}, "pan"),
     ("puntos Saltito", "puntos Saltito", {}, "levitacion"),
     ("puntos Mareo", "puntos Mareo", {}, "nausea"),
@@ -45,6 +45,8 @@ CASOS = [
     ("puntos Abeja enojada", "puntos Abeja enojada", {"bee": 2}),
     ("puntos Se fue la luz", "puntos Se fue la luz", {}, "oscuridad"),
     ("puntos Sin antorchas", "puntos Sin antorchas", {}, "antorchas"),
+    ("puntos Panda", "puntos Panda", {"panda": 1}),
+    ("puntos Bicho raro", "puntos Bicho raro", {}, "un-bicho"),
     ("puntos Mob sorpresa", "puntos Mob sorpresa", {}, "un-mob"),
     ("puntos desconocida (nada)", "puntos Hidratarse", {"zombie": 0}),
     ("raid 2 (solo aviso)", "raid 2", {"zombie": 0}),
@@ -101,10 +103,10 @@ def limpiar(r):
 
 
 def extra(r, cual):
-    if cual == "lanzado":
+    if cual == "lanzado-sin-balde":
         y = float(re.search(r"\[[^,]+, ([-\d.]+)d", r("data get entity LONIUX Pos")).group(1))
         balde = "1" in r("clear LONIUX water_bucket 0")
-        return y > -45 and balde, f"altura {y:.0f}, balde {'sí' if balde else 'no'}"
+        return y > -45 and not balde, f"altura {y:.0f}, balde {'sí' if balde else 'no'}"
     if cual == "lejos":
         time.sleep(3)
         pos = re.search(r"\[([-\d.]+)d, ([-\d.]+)d, ([-\d.]+)d\]", r("data get entity LONIUX Pos"))
@@ -120,6 +122,9 @@ def extra(r, cual):
         return efecto in t, "efecto " + ("presente" if efecto in t else "ausente")
     if cual == "antorchas":
         return True, "(se revisa aparte)"
+    if cual == "un-bicho":
+        n = sum(contar(r, t) for t in ("breeze", "bogged", "creaking"))
+        return n >= 1, f"{n} bicho(s)"
     if cual == "un-mob":
         n = sum(contar(r, t) for t in ("creeper", "spider", "witch", "slime"))
         return n == 1, f"{n} mob"
@@ -154,6 +159,30 @@ def zonas(r):
         bien = (h > 0) == quiere
         resultados.append(bien)
         print(("bien " if bien else "MAL  ") + f"creepers {nombre}: {h} bloques rotos")
+    # rompe-bloques: streamer, con una TNT de prueba agregada al config solo mientras dura esto.
+    config = pathlib.Path(__file__).resolve().parent.parent / "servidor-prueba/plugins/BitsCraftPlugin/config.yml"
+    original = config.read_text(encoding="utf-8")
+    prueba = ("  bits:\n    1:\n      nombre: prueba-tnt\n      acciones:\n"
+              "        - {tipo: tnt, cantidad: 1, mecha-ticks: 40, distancia: 2, rompe-bloques: streamer}\n")
+    config.write_text(original.replace("  bits:\n", prueba, 1), encoding="utf-8")
+    try:
+        r("twitch recargar")
+        for nombre, cx, quiere in (("en la base de LONIUX", 120, True), ("en la región sin dueño", 0, False)):
+            limpiar(r)
+            r("gamemode survival LONIUX")
+            r("effect give LONIUX resistance infinite 255 true")
+            r(f"tp LONIUX {cx} -60 50")
+            hoyos(r, cx, 50)
+            time.sleep(2.2)
+            r("twitch probar-en LONIUX bits 1 Pepito")
+            time.sleep(7)
+            h = hoyos(r, cx, 50)
+            bien = (h > 0) == quiere
+            resultados.append(bien)
+            print(("bien " if bien else "MAL  ") + f"TNT rompe-bloques: streamer {nombre}: {h} bloques rotos")
+    finally:
+        config.write_text(original, encoding="utf-8")
+        r("twitch recargar")
     r("gamemode creative LONIUX")
     limpiar(r)
     return all(resultados)

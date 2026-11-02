@@ -42,7 +42,7 @@ class CatalogoTest {
     @Test
     void elConfigNoTieneProblemas() {
         assertEquals(java.util.List.of(), catalogo.avisos());
-        assertEquals(18 + 4 + 8 + 2, catalogo.todas().size());
+        assertEquals(18 + 4 + 10 + 2, catalogo.todas().size());
     }
 
     @Test
@@ -53,7 +53,7 @@ class CatalogoTest {
         assertEquals("5 zombis", nombre(ev(Evento.Tipo.BITS, 50, null)));
         assertEquals("Zombis y slimes", nombre(ev(Evento.Tipo.BITS, 350, null)));
         assertEquals("¡Water drop!", nombre(ev(Evento.Tipo.BITS, 599, null)));
-        assertEquals("Phantoms de noche", nombre(ev(Evento.Tipo.BITS, 3000, null)));
+        assertEquals("¡WARDEN!", nombre(ev(Evento.Tipo.BITS, 3000, null)));
         assertEquals("¡WITHER!", nombre(ev(Evento.Tipo.BITS, 4999, null)));
         assertEquals("¡DRAGÓN DEL END!", nombre(ev(Evento.Tipo.BITS, 9999, null)));
         assertEquals("¡NUKE!", nombre(ev(Evento.Tipo.BITS, 50000, null)));

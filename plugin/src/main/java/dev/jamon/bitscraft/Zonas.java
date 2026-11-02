@@ -5,15 +5,22 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 /**
  * Zonas protegidas (regiones de WorldGuard, claims de GriefPrevention): ahí las explosiones y los
- * jefes del plugin no rompen bloques. Cada integración se carga solo si su plugin está instalado.
+ * jefes del plugin no rompen bloques, salvo que la zona sea de un dueño permitido (ver {@link Rompe}).
+ * Cada integración se carga solo si su plugin está instalado.
  */
 interface Zonas {
 
-    boolean protegido(Location l);
+    /**
+     * true si el punto está en una zona protegida cuyo dueño no está en {@code permitidos}
+     * (con {@code permitidos} vacío: cualquier zona protegida).
+     */
+    boolean protegido(Location l, Set<UUID> permitidos);
 
     static Zonas cargar(Plugin plugin, Logger log) {
         List<Zonas> todas = new ArrayList<>();
@@ -36,9 +43,9 @@ interface Zonas {
         }
         log.info(nombres.isEmpty() ? "Sin WorldGuard ni GriefPrevention: no hay zonas protegidas."
                 : "Zonas protegidas de: " + String.join(", ", nombres));
-        return l -> {
+        return (l, permitidos) -> {
             for (Zonas z : todas) {
-                if (z.protegido(l)) {
+                if (z.protegido(l, permitidos)) {
                     return true;
                 }
             }
