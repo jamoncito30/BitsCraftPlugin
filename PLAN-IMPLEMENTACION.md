@@ -217,3 +217,95 @@ Diseño para que alcance con **abrir un puerto**:
 4. Bloquear a un espectador: ¿se ignora del todo, o solo sale el aviso en el chat sin la acción?
 5. ¿Hace falta ver el historial en vivo (WebSocket o sondeo cada pocos segundos) o basta con recargar?
 6. ¿«Cancelar» una orden avisa algo en el chat del juego o es silencioso?
+
+---
+
+## E7 — TikTok LIVE (propuesta 2026-11-03, esperando visto bueno; no construir antes)
+
+**Pedido:** los creadores transmiten en Twitch y TikTok a la vez y quieren que **las dos audiencias
+disparen al mismo tiempo**. Aceptan usar algo no oficial («en caso de que falle, podemos ver qué hacer»).
+
+**Base:** TikTok no tiene API oficial de eventos de LIVE. Se usa **TikTokLiveJava** (jwdeveloper, MIT; port
+de TikTok-Live-Connector; la usan NamLivechat y LiveVillages). Se conecta al directo público por el
+@usuario, sin OAuth, y firma la conexión con una clave de **Euler Stream** (`signApiKey`: plan gratis con
+límites, o de pago). Es ingeniería inversa: puede romperse cuando TikTok cambie algo.
+Descartado: TikFinity + ServerTap (obliga a exponer una API que ejecuta comandos, como la E6).
+
+### Diseño
+
+- **Una fuente más, la misma fila.** `Evento` gana el campo `plataforma` (TWITCH | TIKTOK). La fuente TikTok
+  produce eventos que entran a la **misma `Fila` del streamer** (por UUID del jugador), con el mismo
+  catálogo, los mismos topes por minuto, la misma pausa y el mismo guardado en disco. Si LONIUX recibe
+  600 bits en Twitch y un León en TikTok en el mismo segundo, salen en orden y respetan los topes juntos.
+- **Quién es quién:** en `config.yml`, una sección `streamers` por jugador de Minecraft:
+  ```yaml
+  streamers:
+    LONIUX: {tiktok: "loniux"}      # el @ de TikTok; Twitch se sigue vinculando con /bits vincular
+    LionGGZ: {tiktok: "lionggz"}
+  ```
+  Además `/bits tiktok <usuario>` (el propio streamer) o `/bits tiktok <usuario> <jugador>` (admin) lo cambia
+  sin editar archivos. El canal de Twitch no va en el config: sale del vínculo (OAuth).
+- **Comando:** `/bits` pasa a ser el comando principal y `/twitch` queda como alias (no se rompe nada).
+  `/bits estado` muestra las dos plataformas.
+- **Regalos → catálogo:**
+  1. **Por nombre** (va primero): `catalogo.tiktok-regalos: {"Rose": {...}, "Lion": {...}}`, con su propio
+     nombre y acciones (o `como-bits: 500` para reusar un escalón de bits).
+  2. **Por valor:** si el regalo no tiene entrada propia, `monedas × cantidad × tiktok.bits-por-moneda`
+     (por defecto 1) se trata como bits y cae en los escalones de bits. Así una Rosa (1 moneda) no hace
+     nada y un León (29.999 monedas) da la nuke.
+- **Combos (streaks):** los regalos que se pueden repetir llegan como combo en curso → terminado. Solo se
+  actúa **cuando el combo termina**, con el total (`monedas × repeticiones`), y una sola vez por combo
+  (descarte por id, igual que los repetidos de EventSub). Los que no se repiten se actúan al llegar.
+- **Follows, likes y shares (opcionales, apagados por defecto):** `tiktok-follow`, `tiktok-share` y
+  `tiktok-likes` en el catálogo. Los likes se agrupan («cada 500 likes») con enfriamiento, porque llegan
+  por miles.
+- **Avisos:** detalle por plataforma, por ejemplo «regaló 5× Rosa en TikTok», con un ícono o color propio en el chat.
+
+### Que aguante fallos
+
+- **Aislada de Twitch:** las clases de TikTok se cargan solo si `tiktok.activo: true` y hay clave. Cualquier
+  error o `LinkageError` de la librería se atrapa y apaga **solo** TikTok, con un aviso en la consola.
+- **Una conexión por streamer, en hilos del plugin.** Si no está en vivo, se vuelve a mirar cada
+  `tiktok.revisar-cada-segundos` (por defecto 120). Si se cae, reconecta con espera creciente
+  (10 s → 5 min, sin gastar de más el límite de Euler).
+- `/bits estado`: «TikTok: conectado a @loniux (en vivo)», «esperando que empiece el directo»,
+  «reconectando en 40 s», «apagado: falta la clave», «error de firma (¿límite de Euler?)».
+- `/bits tiktok activar | desactivar | recargar` sin reiniciar el servidor.
+- **La clave de Euler es un secreto:** va en `plugins/BitsCraftPlugin/secretos.yml` (no en config.yml), con
+  permisos solo para el dueño, igual que los tokens. Nunca va a la consola, a los logs ni a `/bits estado`
+  (solo «clave: configurada»).
+
+### Cómo se arma
+
+- TikTokLiveJava se publica en **JitPack** (`com.github.jwdeveloper.TikTok-Live-Java:Client`; la última
+  versión publicada es 1.8.11, de enero de 2025, hay que confirmarla al empezar). `scripts/compilar.sh` la
+  baja con sus dependencias (protobuf y las que pida), fija el SHA-256 de cada una y las mete dentro del jar.
+  El jar crece unos MB. Bajar esos jars puede pedir permiso en la sesión.
+- Las clases de TikTok quedan en sus propios archivos (`FuenteTikTok`, `ConexionTikTok`); el resto del plugin
+  solo ve `Evento`.
+
+### Pruebas
+
+- **JUnit, sin la librería:** conversión de monedas a bits, regalo por nombre antes que por valor, combo que
+  dispara una sola vez al terminar, likes agrupados, y que un error de TikTok no toque la fila de Twitch.
+- **En el servidor local:** `/bits probar-en LONIUX tiktok-regalo Rose 5` y similares (mismo camino que un
+  regalo real) y, si la librería lo permite, eventos de prueba publicados en el cliente sin conectarse.
+- **Real:** con un directo de TikTok del usuario o de un creador (5 minutos alcanzan): conectar, mandar una
+  Rosa y un regalo con combo, y ver que Twitch sigue funcionando al mismo tiempo.
+
+### README
+
+Qué es Euler Stream y cómo sacar la clave; dónde ponerla (`secretos.yml`); que es una conexión no oficial
+que puede romperse; qué hacer si se rompe (avisar, actualizar la librería a la versión nueva y recompilar);
+y los mensajes de `/bits estado`.
+
+### Preguntas abiertas
+
+1. Los @ de TikTok de LONIUX y LionGGZ.
+2. Equivalencia: ¿1 moneda de TikTok = 1 bit (propuesta), o algo más generoso para TikTok?
+3. ¿Qué regalos con nombre propio quieren (Rosa, TikTok, Corazón, León, Universo…) y qué hace cada uno?
+4. ¿Follows, likes y shares de TikTok hacen algo, o solo los regalos?
+5. Plan de Euler Stream: ¿gratis (con límites de conexiones o firmas por día) o de pago? ¿Quién crea la
+   cuenta y de quién es la clave en el servidor del amigo?
+6. ¿Alguien puede hacer un directo corto de TikTok para la prueba real? (TikTok exige requisitos para
+   transmitir.)
