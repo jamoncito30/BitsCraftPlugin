@@ -63,7 +63,7 @@ avisos:
     follow: "te sigue"
 
 # ----------------------------------------------------------------------------------------------
-# CATÁLOGO: qué pasa con cada evento.
+# CATÁLOGO: qué pasa con cada evento. Confirmado por LONIUX y LionGGZ el 2026-11-03.
 # Bits, subs y raids usan escalones: se elige el escalón más alto que no pase el monto
 # (350 bits → el de 300). Cada escalón tiene un nombre (sale en el aviso) y una lista de acciones.
 #

@@ -5,7 +5,7 @@
 Plugin de Paper que conecta los canales de Twitch de los streamers con lo que les pasa en Minecraft.
 Ejemplo: alguien dona 100 bits en el canal de LONIUX y aparece un creeper junto a LONIUX.
 
-- **Estado:** etapa 0 cerrada el 2026-11-02. Plan de implementación aprobado el 2026-11-02 en `PLAN-IMPLEMENTACION.md`. **0.3.0 el 2026-11-02** con las respuestas de LONIUX (§13; falta LionGGZ). Ver §12 y `docs/PRUEBAS.md`. El **catálogo de la §4 es una propuesta** que el
+- **Estado:** etapa 0 cerrada el 2026-11-02. Plan de implementación aprobado el 2026-11-02 en `PLAN-IMPLEMENTACION.md`. **0.3.0 el 2026-11-02** con el catálogo confirmado por LONIUX y LionGGZ (§13). Ver §12 y `docs/PRUEBAS.md`. El **catálogo de la §4 es una propuesta** que el
   usuario les pasa a LONIUX y LionGGZ; lo que digan se cambia en `config.yml`, sin tocar código.
 - **Para quién:** el servidor de contenido de los creadores. **No se despliega en el Servidor Jamón.**
 - **Regla de seguridad:** nunca se leen, muestran ni escriben en logs los tokens. El plugin no usa
@@ -329,7 +329,10 @@ categorías; se cambian en `config.yml` sin recompilar).
 
 ---
 
-## 13. Respuestas de LONIUX (2026-11-02, preliminares: falta LionGGZ) → 0.2.0
+## 13. Respuestas de los creadores → 0.2.0 / 0.3.0 — CATÁLOGO CONFIRMADO
+
+> **Confirmado el 2026-11-03:** LionGGZ "está de acuerdo con las cosas que loniux dijo". Las respuestas de
+> abajo ya no son preliminares: valen para los dos creadores.
 
 | # | Pregunta | Respuesta (Discord) | Cómo quedó en `config.yml` |
 |---|---|---|---|
@@ -356,3 +359,12 @@ explosiones en las zonas, así que el dueño tiene que permitirlas (`/claimexplo
 - **Pregunta pendiente para los creadores:** ¿qué plugin de protección o de parcelas usa su servidor
   (GriefPrevention, WorldGuard, PlotSquared, Lands, otro, ninguno)? Sin ninguno, `solo-streamer` no rompe
   nada. Y el dueño de cada zona tiene que permitir explosiones en ella (en GP, `/claimexplosions`).
+
+## 14. Qué falta para entregar (2026-11-03)
+
+El catálogo está confirmado y el plugin está probado con Twitch real. Solo falta:
+- **Qué plugin de protección o de parcelas usa el servidor del amigo de los creadores** (probablemente en
+  México). Si es GriefPrevention o WorldGuard, ya funciona; si es otro, hay que agregar una clase `Zonas`
+  para él; si no hay ninguno, el wither y el dragón no rompen nada.
+- Confirmar la versión del servidor (se compila contra Paper 26.3).
+- Ese amigo instala el jar, pega el Client ID y da `bitscraft.streamer` a LONIUX y LionGGZ (README).
