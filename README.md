@@ -136,12 +136,14 @@ Tipos de acción:
 | `false` | En ningún lado (por defecto en la TNT y la nuke) |
 | `true` | Solo fuera de las zonas protegidas (por defecto en los creepers) |
 | `streamer` | Fuera de las zonas, y también en las zonas del streamer al que le donaron |
-| `streamers` | Fuera de las zonas, y también en las zonas de cualquier streamer vinculado (lo que tienen el wither y el dragón) |
+| `streamers` | Fuera de las zonas, y también en las zonas de cualquier streamer vinculado |
+| `solo-streamer` | **Solo** dentro de las zonas del streamer al que le donaron (sus parcelas o construcciones); en ningún otro lado. Es lo que tienen el wither y el dragón |
 
 Una zona es «de alguien» si es el dueño del claim de GriefPrevention o de la región de WorldGuard.
-Con `streamer` o `streamers`, el dueño además tiene que permitir explosiones en su zona, porque esos
-plugins también las frenan: en GriefPrevention, `/claimexplosions` parado en el claim; en WorldGuard,
-`/rg flag <región> tnt allow`, `creeper-explosion allow` y `other-explosion allow`.
+Sin ninguno de esos plugins no hay zonas, así que con `solo-streamer` no se rompe nada.
+Con `streamer`, `streamers` o `solo-streamer`, el dueño además tiene que permitir explosiones en su
+zona, porque esos plugins también las frenan: en GriefPrevention, `/claimexplosions` parado en el
+claim; en WorldGuard, `/rg flag <región> tnt allow`, `creeper-explosion allow` y `other-explosion allow`.
 
 En `nombre` y `comando` se puede usar `{usuario}`, `{streamer}`, `{canal}`, `{monto}` y
 `{recompensa}`. Lo que viene de Twitch se limpia (solo letras, números y `_`) para que nadie pueda

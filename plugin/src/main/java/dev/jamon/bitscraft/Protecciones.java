@@ -1,5 +1,6 @@
 package dev.jamon.bitscraft;
 
+import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Firework;
@@ -36,9 +37,10 @@ final class Protecciones implements Listener {
         this.vinculados = vinculados;
     }
 
-    /** Dueños cuyas zonas puede romper la entidad, o null si no rompe nada. */
-    private Set<UUID> permitidos(Entity e) {
-        return marcas.rompe(e).duenosPermitidos(marcas.streamer(e), vinculados.get());
+    /** Si la entidad (marcada) puede romper el bloque que está en {@code l}. */
+    private boolean puedeRomper(Entity e, Location l, Set<UUID> v) {
+        Rompe r = marcas.rompe(e);
+        return r != Rompe.NO && r.permite(zonas.enZona(l), permitidos -> zonas.protegido(l, permitidos), marcas.streamer(e), v);
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -47,11 +49,11 @@ final class Protecciones implements Listener {
         if (!marcas.marcada(origen)) {
             return;
         }
-        Set<UUID> permitidos = permitidos(origen);
-        if (permitidos == null) {
+        if (marcas.rompe(origen) == Rompe.NO) {
             e.blockList().clear();
         } else {
-            e.blockList().removeIf(b -> zonas.protegido(b.getLocation(), permitidos));
+            Set<UUID> v = vinculados.get();
+            e.blockList().removeIf(b -> !puedeRomper(origen, b.getLocation(), v));
         }
     }
 
@@ -62,8 +64,7 @@ final class Protecciones implements Listener {
             return;
         }
         Block b = e.getBlock();
-        Set<UUID> permitidos = permitidos(ent);
-        if (permitidos == null || zonas.protegido(b.getLocation(), permitidos)) {
+        if (!puedeRomper(ent, b.getLocation(), vinculados.get())) {
             e.setCancelled(true);
         }
     }

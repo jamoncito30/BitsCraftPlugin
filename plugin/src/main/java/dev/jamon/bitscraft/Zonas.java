@@ -10,9 +10,10 @@ import java.util.UUID;
 import java.util.logging.Logger;
 
 /**
- * Zonas protegidas (regiones de WorldGuard, claims de GriefPrevention): ahí las explosiones y los
- * jefes del plugin no rompen bloques, salvo que la zona sea de un dueño permitido (ver {@link Rompe}).
- * Cada integración se carga solo si su plugin está instalado.
+ * Zonas protegidas de un plugin de protección (hoy WorldGuard y GriefPrevention): sirven para decidir
+ * dónde rompen bloques las explosiones y los jefes del plugin (ver {@link Rompe}). Cada integración se
+ * carga solo si su plugin está instalado; para otro plugin (de parcelas, por ejemplo) basta una clase
+ * más que implemente esta interfaz y una línea en {@link #cargar}.
  */
 interface Zonas {
 
@@ -21,6 +22,11 @@ interface Zonas {
      * (con {@code permitidos} vacío: cualquier zona protegida).
      */
     boolean protegido(Location l, Set<UUID> permitidos);
+
+    /** true si el punto está dentro de alguna zona protegida, sea de quien sea. */
+    default boolean enZona(Location l) {
+        return protegido(l, Set.of());
+    }
 
     static Zonas cargar(Plugin plugin, Logger log) {
         List<Zonas> todas = new ArrayList<>();
@@ -43,13 +49,26 @@ interface Zonas {
         }
         log.info(nombres.isEmpty() ? "Sin WorldGuard ni GriefPrevention: no hay zonas protegidas."
                 : "Zonas protegidas de: " + String.join(", ", nombres));
-        return (l, permitidos) -> {
-            for (Zonas z : todas) {
-                if (z.protegido(l, permitidos)) {
-                    return true;
+        return new Zonas() {
+            @Override
+            public boolean protegido(Location l, Set<UUID> permitidos) {
+                for (Zonas z : todas) {
+                    if (z.protegido(l, permitidos)) {
+                        return true;
+                    }
                 }
+                return false;
             }
-            return false;
+
+            @Override
+            public boolean enZona(Location l) {
+                for (Zonas z : todas) {
+                    if (z.enZona(l)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
         };
     }
 }

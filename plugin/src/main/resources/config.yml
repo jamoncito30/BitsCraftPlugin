@@ -80,7 +80,8 @@ avisos:
 #   nuke       lado (10 = 10×10 TNT), mecha-ticks, rompe-bloques
 #   rompe-bloques (tnt, nuke, mob, jefe): false = nunca; true = fuera de zonas protegidas;
 #              streamer = además en las zonas del streamer al que le donaron;
-#              streamers = además en las zonas de cualquier streamer vinculado.
+#              streamers = además en las zonas de cualquier streamer vinculado;
+#              solo-streamer = SOLO dentro de las zonas del streamer al que le donaron, en ningún otro lado.
 #              Una zona es de alguien si es el dueño del claim (GriefPrevention) o de la región (WorldGuard).
 #   lanzar     altura, balde (true = le pone un balde de agua en la mano)
 #   tp-azar    distancia (bloques)
@@ -167,12 +168,12 @@ catalogo:
     4000:
       nombre: "¡WITHER!"
       acciones:
-        # LONIUX: "si se puede que rompa solo lo nuestro" → afuera y en las zonas de los streamers (falta confirmar).
-        - {tipo: jefe, mob: wither, cantidad: 1, distancia: [8, 12], rompe-bloques: streamers, nombre: "{usuario}"}
+        # LONIUX: "si se puede que rompa solo lo nuestro" = solo las parcelas o construcciones del streamer afectado.
+        - {tipo: jefe, mob: wither, cantidad: 1, distancia: [8, 12], rompe-bloques: solo-streamer, nombre: "{usuario}"}
     5000:
       nombre: "¡DRAGÓN DEL END!"
       acciones:
-        - {tipo: jefe, mob: ender_dragon, cantidad: 1, distancia: [20, 30], rompe-bloques: streamers, nombre: "{usuario}"}
+        - {tipo: jefe, mob: ender_dragon, cantidad: 1, distancia: [20, 30], rompe-bloques: solo-streamer, nombre: "{usuario}"}
     10000:
       nombre: "¡NUKE!"
       acciones:

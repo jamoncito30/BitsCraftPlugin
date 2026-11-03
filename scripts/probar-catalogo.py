@@ -159,27 +159,28 @@ def zonas(r):
         bien = (h > 0) == quiere
         resultados.append(bien)
         print(("bien " if bien else "MAL  ") + f"creepers {nombre}: {h} bloques rotos")
-    # rompe-bloques: streamer, con una TNT de prueba agregada al config solo mientras dura esto.
+    # rompe-bloques: solo-streamer, con una TNT de prueba agregada al config solo mientras dura esto.
     config = pathlib.Path(__file__).resolve().parent.parent / "servidor-prueba/plugins/BitsCraftPlugin/config.yml"
     original = config.read_text(encoding="utf-8")
     prueba = ("  bits:\n    1:\n      nombre: prueba-tnt\n      acciones:\n"
-              "        - {tipo: tnt, cantidad: 1, mecha-ticks: 40, distancia: 2, rompe-bloques: streamer}\n")
+              "        - {tipo: tnt, cantidad: 1, mecha-ticks: 40, distancia: 2, rompe-bloques: solo-streamer}\n")
     config.write_text(original.replace("  bits:\n", prueba, 1), encoding="utf-8")
     try:
         r("twitch recargar")
-        for nombre, cx, quiere in (("en la base de LONIUX", 120, True), ("en la región sin dueño", 0, False)):
+        for nombre, cx, cz, quiere in (("en la base de LONIUX", 120, 50, True), ("en la región sin dueño", 0, 50, False),
+                                       ("afuera", 0, -50, False)):
             limpiar(r)
             r("gamemode survival LONIUX")
             r("effect give LONIUX resistance infinite 255 true")
-            r(f"tp LONIUX {cx} -60 50")
-            hoyos(r, cx, 50)
+            r(f"tp LONIUX {cx} -60 {cz}")
+            hoyos(r, cx, cz)
             time.sleep(2.2)
             r("twitch probar-en LONIUX bits 1 Pepito")
             time.sleep(7)
-            h = hoyos(r, cx, 50)
+            h = hoyos(r, cx, cz)
             bien = (h > 0) == quiere
             resultados.append(bien)
-            print(("bien " if bien else "MAL  ") + f"TNT rompe-bloques: streamer {nombre}: {h} bloques rotos")
+            print(("bien " if bien else "MAL  ") + f"TNT rompe-bloques: solo-streamer {nombre}: {h} bloques rotos")
     finally:
         config.write_text(original, encoding="utf-8")
         r("twitch recargar")

@@ -1,5 +1,16 @@
 # Qué se probó
 
+## 0.3.0 (2026-11-02): «solo lo nuestro»
+
+- JUnit: 27 pruebas; `RompeTest` revisa los 5 modos de `rompe-bloques` en la base del streamer, en la de
+  otro streamer, en una zona sin dueño y afuera.
+- `scripts/probar-catalogo.py zonas`: TNT con `rompe-bloques: solo-streamer` → base de LONIUX 88 bloques,
+  región sin dueño 0, afuera 0. Creepers como antes (región 0, afuera 87).
+- Wither real (`/twitch probar-en LONIUX bits 4000`, 35 s, LONIUX en supervivencia): afuera 0 bloques
+  rotos; en la base de LONIUX (región de WorldGuard con dueño LONIUX) 69.
+- No probado: el wither rompiendo dentro de un claim de GriefPrevention (el servidor de prueba solo tiene
+  regiones de WorldGuard; GriefPrevention puede frenarlo aparte si el claim no permite explosiones).
+
 ## 0.2.0 (2026-11-02): respuestas de LONIUX
 
 - JUnit: 27 pruebas (2 nuevas de `rompe-bloques`).
