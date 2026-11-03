@@ -142,8 +142,8 @@ Una pestaña «BitsCraft» en la app JamonSync (Tauri; la lleva otra sesión) qu
 
 ### Lado del plugin: API HTTP de administración
 
-- **Escucha solo en 127.0.0.1** (puerto configurable, apagada por defecto: `admin-api.activa: false`), como
-  la API de JamonMercado. Para llegar desde afuera, ver «Cómo llega el launcher».
+- Apagada por defecto, dirección y puerto configurables, HTTPS propio y token de admin: ver «Cómo llega
+  el launcher».
 - **Historial:** cada evento recibido se anota en `historial/AAAA-MM-DD.jsonl` (tipo, usuario, monto o
   recompensa, streamer, qué entrada del catálogo tocó, estado: ejecutado, en fila, descartado, cancelado,
   bloqueado). Se guarda N días (configurable). Sin mensajes de bits si `mostrar-mensaje-bits` es false.
@@ -168,11 +168,32 @@ Una pestaña «BitsCraft» en la app JamonSync (Tauri; la lleva otra sesión) qu
 
 ### Cómo llega el launcher al servidor de los creadores
 
-El plugin corre en **su** servidor, no en serversjamon. Opciones, de más a menos recomendada:
-1. **Proxy con HTTPS en su máquina** (Caddy u otro) hacia 127.0.0.1:<puerto>, solo la ruta `/api/`.
-2. **Tailscale**: su servidor en el tailnet del usuario y la API sin exponerse a internet (como serversjamon).
-3. Si es un hosting con panel, sin proxy ni Tailscale: túnel saliente (por ejemplo, Cloudflare Tunnel).
-   Puerto abierto sin TLS: **no**.
+**Dato (2026-11-02):** el servidor de los creadores no es el nuestro: es uno casero o dedicado de un amigo
+de ellos, probablemente en México, parecido a serversjamon (se supone Linux con un panel tipo Crafty).
+**No lo administramos:** cualquier cambio de red o de instalación allá lo hace ese amigo. Por eso el
+acceso no puede depender de que configuremos su red ni de que ponga un proxy.
+
+Diseño para que alcance con **abrir un puerto**:
+- La API escucha en `admin-api.direccion` (por defecto `127.0.0.1`) y `admin-api.puerto` (por defecto
+  `8097`), y viene apagada (`admin-api.activa: false`).
+- **HTTPS propio, sin proxy:** al activarla por primera vez, el plugin crea un certificado autofirmado
+  (guardado en `admin/`, legible solo por el dueño) y muestra su huella SHA-256 en la consola. Al emparejar,
+  el launcher guarda esa huella y después solo acepta ese certificado (*pinning*). Así el tráfico va
+  cifrado aunque el amigo solo abra un puerto, sin dominio ni Let's Encrypt.
+- **Token de admin:** solo con el emparejamiento por código de un solo uso (arriba). Sin token, todo
+  responde 401, con límite de intentos por IP.
+- Si el amigo ya usa Tailscale o Cloudflare Tunnel, se puede dejar en `127.0.0.1` y entrar por ahí; el HTTPS
+  propio sigue igual.
+
+**Qué pedirle al amigo cuando llegue el momento** (instrucciones cortas para él):
+1. Copiar el jar nuevo y, en `plugins/BitsCraftPlugin/config.yml`, poner `admin-api.activa: true` y
+   `direccion: 0.0.0.0`. Reiniciar.
+2. Abrir el puerto TCP `8097` en el router (reenvío a la IP de la máquina) y en el firewall de Linux
+   (`sudo ufw allow 8097/tcp` o el que use). Si prefiere no abrir puertos: Tailscale (nos invita a su
+   tailnet) o Cloudflare Tunnel hacia `https://127.0.0.1:8097`.
+3. Pasarnos la IP pública o el dominio (o el nombre en Tailscale) y la huella SHA-256 que salió en la consola.
+4. Dar el permiso `bitscraft.admin` a quien vaya a emparejar (para sacar el código con
+   `/twitch admin codigo`), o sacarlo él mismo desde la consola y pasárnoslo.
 
 ### Lado de JamonSync (otra sesión)
 
@@ -185,8 +206,9 @@ El plugin corre en **su** servidor, no en serversjamon. Opciones, de más a meno
 
 ### Preguntas abiertas
 
-1. ¿Dónde corre el servidor de los creadores (VPS, hosting con panel, PC de alguien)? ¿Pueden poner un
-   proxy con HTTPS o entrar a Tailscale? De eso depende cómo llega el launcher.
+1. ~~¿Dónde corre el servidor?~~ Respondida: servidor de un amigo de los creadores, probablemente en México
+   (ver arriba). Falta confirmar con él: sistema y panel, si puede abrir un puerto o prefiere Tailscale o
+   Cloudflare Tunnel, y si la IP pública es fija o hace falta DNS dinámico.
 2. ¿Solo el usuario administra, o también LONIUX/LionGGZ o un moderador? Hoy el diseño es para uno.
 3. ¿Cuántos días de historial se guardan?
 4. Bloquear a un espectador: ¿se ignora del todo, o solo sale el aviso en el chat sin la acción?
