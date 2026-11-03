@@ -126,3 +126,69 @@ qué hacer si pide volver a vincular. Capturas del aviso en pantalla.
 3. `/twitch vincular` real con tu app → "vinculado" y el archivo de token con permisos solo-dueño.
 4. Twitch CLI mock: cada `twitch event trigger` dispara la acción en el streamer correcto.
 5. Capturas en `capturas/` y resumen en `docs/`.
+
+---
+
+## E6 (futura, NO construir hasta que el usuario lo pida): administración desde JamonSync
+
+**Pedido del usuario (2026-11-02):** "para ocupar el launcher que tenemos, puedes crear un apartado de
+administracion para configurar ese plugin en especifico? asi como listado por partes de las donaciones
+(mas que nada de las ordenes que le llega al plugin,). asi como otras caracteristicas de moderacion,
+unicamente que lo pueda ver yo."
+
+Una pestaña «BitsCraft» en la app JamonSync (Tauri; la lleva otra sesión) que **solo ve el usuario**, con:
+(a) editar el catálogo, los precios y los límites; (b) el historial de órdenes/donaciones por tipo;
+(c) moderación.
+
+### Lado del plugin: API HTTP de administración
+
+- **Escucha solo en 127.0.0.1** (puerto configurable, apagada por defecto: `admin-api.activa: false`), como
+  la API de JamonMercado. Para llegar desde afuera, ver «Cómo llega el launcher».
+- **Historial:** cada evento recibido se anota en `historial/AAAA-MM-DD.jsonl` (tipo, usuario, monto o
+  recompensa, streamer, qué entrada del catálogo tocó, estado: ejecutado, en fila, descartado, cancelado,
+  bloqueado). Se guarda N días (configurable). Sin mensajes de bits si `mostrar-mensaje-bits` es false.
+- **Endpoints** (JSON):
+  - `GET /api/estado`: streamers, conexión con Twitch («7/7 eventos»), fila de cada uno, pausa.
+  - `GET /api/eventos?tipo=&streamer=&desde=&hasta=`: historial filtrado y paginado; totales por tipo.
+  - `GET /api/catalogo` · `PUT /api/catalogo`: el catálogo y el ritmo como JSON. Antes de guardar se valida
+    igual que `/twitch recargar` (mobs, ítems, efectos); si hay errores no se guarda. Copia de respaldo
+    `config.yml.AAAA-MM-DD-HHMM` antes de cada cambio y recarga sin reiniciar.
+  - Moderación: `POST /api/streamers/{jugador}/pausa|reanudar|vaciar`, `DELETE /api/fila/{jugador}/{evento}`
+    (cancelar una orden), `POST /api/eventos/{id}/reintentar`, `GET|POST|DELETE /api/bloqueados`
+    (espectadores bloqueados por id de Twitch: sus eventos solo se anotan, sin acción ni aviso),
+    `POST /api/probar` (como `/twitch probar-en`).
+- **Seguridad:**
+  - Emparejar el launcher con un código de un solo uso: `/twitch admin codigo` en el juego o en la consola
+    (solo `bitscraft.admin`). Vence en 5 minutos. El launcher lo cambia por un token de sesión.
+  - Sesiones guardadas con hash SHA-256, que se pueden revocar (`/twitch admin sesiones|cerrar`).
+  - Límite de intentos por IP, CORS solo para el origen de la app Tauri, y registro de cada acción de
+    admin (quién, qué, cuándo).
+  - **Los tokens de Twitch nunca salen por la API**: no hay endpoint que lea `tokens/` ni que devuelva
+    tokens. El client id (público) sí se puede ver.
+
+### Cómo llega el launcher al servidor de los creadores
+
+El plugin corre en **su** servidor, no en serversjamon. Opciones, de más a menos recomendada:
+1. **Proxy con HTTPS en su máquina** (Caddy u otro) hacia 127.0.0.1:<puerto>, solo la ruta `/api/`.
+2. **Tailscale**: su servidor en el tailnet del usuario y la API sin exponerse a internet (como serversjamon).
+3. Si es un hosting con panel, sin proxy ni Tailscale: túnel saliente (por ejemplo, Cloudflare Tunnel).
+   Puerto abierto sin TLS: **no**.
+
+### Lado de JamonSync (otra sesión)
+
+- La pestaña aparece solo si hay un servidor emparejado. JamonSync se reparte a otros jugadores, así que
+  sin emparejar no se ve nada.
+- La dirección del servidor y el token de sesión van en el llavero del sistema (keyring de Tauri), nunca
+  en un archivo de configuración.
+- Vistas: Estado · Historial (filtros por tipo y streamer, totales) · Catálogo (tabla editable con
+  validación) · Moderación (fila de cada streamer, cancelar, reintentar, bloqueados).
+
+### Preguntas abiertas
+
+1. ¿Dónde corre el servidor de los creadores (VPS, hosting con panel, PC de alguien)? ¿Pueden poner un
+   proxy con HTTPS o entrar a Tailscale? De eso depende cómo llega el launcher.
+2. ¿Solo el usuario administra, o también LONIUX/LionGGZ o un moderador? Hoy el diseño es para uno.
+3. ¿Cuántos días de historial se guardan?
+4. Bloquear a un espectador: ¿se ignora del todo, o solo sale el aviso en el chat sin la acción?
+5. ¿Hace falta ver el historial en vivo (WebSocket o sondeo cada pocos segundos) o basta con recargar?
+6. ¿«Cancelar» una orden avisa algo en el chat del juego o es silencioso?
