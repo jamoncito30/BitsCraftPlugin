@@ -129,7 +129,10 @@ qué hacer si pide volver a vincular. Capturas del aviso en pantalla.
 
 ---
 
-## E6 (futura, NO construir hasta que el usuario lo pida): administración desde JamonSync
+## E6 — ARCHIVADA (2026-11-02): administración desde JamonSync
+
+> **Archivada por el usuario:** "okay viendolo, lo vamos a dejar archivado la idea". Se deja el diseño
+> por si se retoma; no se construye.
 
 **Pedido del usuario (2026-11-02):** "para ocupar el launcher que tenemos, puedes crear un apartado de
 administracion para configurar ese plugin en especifico? asi como listado por partes de las donaciones
