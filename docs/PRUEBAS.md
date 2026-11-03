@@ -9,6 +9,9 @@
 - `tokens/<uuid>.json` y la carpeta `tokens/`: la ACL solo tiene al usuario de Windows (`icacls`). El
   contenido no se abrió.
 - Logs del servidor: 0 apariciones de `access_token`, `refresh_token`, `Bearer`, `OAuth` o `device_code`.
+- **Evento real:** dos canjes de la recompensa «Saltito» en el canal jamoncito3_0 (23:32 y 23:34) llegaron
+  por EventSub y le dieron levitación a LONIUX, con aviso en pantalla y en el chat. Los bits y las subs
+  van por el mismo camino (se probaron con `/twitch probar-en` y el EventSub falso: no se pueden simular en Twitch real).
 
 ## 0.3.0 (2026-11-02): «solo lo nuestro»
 
