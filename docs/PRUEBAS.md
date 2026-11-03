@@ -1,5 +1,15 @@
 # Qué se probó
 
+## Vinculación real con Twitch (2026-11-02, 0.3.0)
+
+- App «BitsCraftPlugin» del usuario en dev.twitch.tv (cliente público). `/twitch vincular` desde el
+  cliente LONIUX → enlace → aceptado en Twitch → «¡Listo! Tu canal jamoncito3_0 quedó conectado» en 22 s.
+- `/twitch estado`: «conectado (7/7 eventos)» contra `wss://eventsub.wss.twitch.tv/ws`: Twitch aceptó las
+  7 suscripciones, incluida `channel.follow` v2.
+- `tokens/<uuid>.json` y la carpeta `tokens/`: la ACL solo tiene al usuario de Windows (`icacls`). El
+  contenido no se abrió.
+- Logs del servidor: 0 apariciones de `access_token`, `refresh_token`, `Bearer`, `OAuth` o `device_code`.
+
 ## 0.3.0 (2026-11-02): «solo lo nuestro»
 
 - JUnit: 27 pruebas; `RompeTest` revisa los 5 modos de `rompe-bloques` en la base del streamer, en la de
