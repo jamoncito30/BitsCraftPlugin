@@ -30,6 +30,21 @@ class CatalogoTest {
         catalogo = Catalogo.leer(config.getConfigurationSection("catalogo"));
     }
 
+    /** Una copia del config.yml real (para pruebas que lo cambian). */
+    static YamlConfiguration copiaConfig() {
+        try (Reader r = new InputStreamReader(Objects.requireNonNull(
+                CatalogoTest.class.getClassLoader().getResourceAsStream("config.yml")), StandardCharsets.UTF_8)) {
+            return YamlConfiguration.loadConfiguration(r);
+        } catch (java.io.IOException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
+    }
+
+    /** El catálogo real con otro tiktok.bits-por-moneda. */
+    static Catalogo catalogoReal(double bitsPorMoneda) {
+        return Catalogo.leer(copiaConfig().getConfigurationSection("catalogo"), bitsPorMoneda);
+    }
+
     static Evento ev(Evento.Tipo tipo, int monto, String recompensa) {
         return new Evento("x", tipo, "1", "Pepito", monto, recompensa, null, 0);
     }

@@ -23,7 +23,7 @@ import java.util.logging.Level;
 
 /**
  * BitsCraftPlugin: lo que pasa en el canal de Twitch de cada streamer (bits, subs, puntos, raids,
- * follows) le pasa a él en el juego. Ver PLAN.md y README.md en la raíz del repo.
+ * follows) y en su directo de TikTok (regalos y, si se quiere, follows, shares y likes) le pasa a él en el juego. Ver PLAN.md y README.md en la raíz del repo.
  */
 public final class BitsCraftPlugin extends JavaPlugin implements Listener {
 
@@ -32,6 +32,7 @@ public final class BitsCraftPlugin extends JavaPlugin implements Listener {
     private Marcas marcas;
     private Ejecutor ejecutor;
     private Streamers streamers;
+    private TikTok tiktok;
 
     @Override
     public void onEnable() {
@@ -57,14 +58,15 @@ public final class BitsCraftPlugin extends JavaPlugin implements Listener {
         marcas = new Marcas(this);
         ejecutor = new Ejecutor(this, marcas, reloj, Ritmo.leer(getConfig().getConfigurationSection("ritmo")), Set.of());
         streamers = new Streamers(this, reloj, hilos, http, almacen, guardado, marcas, ejecutor);
+        tiktok = new TikTok(getLogger(), reloj, getDataFolder().toPath(), this::alHiloPrincipal);
         aplicarConfig();
         streamers.iniciar();
 
         getServer().getPluginManager().registerEvents(new Protecciones(marcas, Zonas.cargar(this, getLogger()), streamers::vinculados), this);
         getServer().getPluginManager().registerEvents(this, this);
-        PluginCommand cmd = getCommand("twitch");
+        PluginCommand cmd = getCommand("bits");
         if (cmd != null) {
-            ComandoTwitch c = new ComandoTwitch(streamers, this::recargar, reloj);
+            ComandoTwitch c = new ComandoTwitch(streamers, tiktok, this::recargar, this::guardarTikTokActivo, reloj);
             cmd.setExecutor(c);
             cmd.setTabCompleter(c);
         }
@@ -76,6 +78,9 @@ public final class BitsCraftPlugin extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
+        if (tiktok != null) {
+            tiktok.apagar();
+        }
         if (streamers != null) {
             streamers.apagar();
         }
@@ -113,7 +118,7 @@ public final class BitsCraftPlugin extends JavaPlugin implements Listener {
             }
         }
         ejecutor.configurar(ritmo, Set.copyOf(quitables));
-        Catalogo catalogo = Catalogo.leer(c.getConfigurationSection("catalogo"));
+        Catalogo catalogo = Catalogo.leer(c.getConfigurationSection("catalogo"), c.getDouble("tiktok.bits-por-moneda", 1));
         List<String> problemas = new java.util.ArrayList<>(catalogo.avisos());
         problemas.addAll(ejecutor.validar(catalogo));
         problemas.forEach(p -> getLogger().warning("Catálogo: " + p));
@@ -125,6 +130,24 @@ public final class BitsCraftPlugin extends JavaPlugin implements Listener {
                 Set.copyOf(c.getStringList("mundos-excluidos")));
         getLogger().info("Catálogo: " + catalogo.todas().size() + " entradas"
                 + (problemas.isEmpty() ? ", sin problemas." : ", " + problemas.size() + " problema(s) (ver arriba)."));
+        tiktok.configurar(c.getConfigurationSection("tiktok"), c.getConfigurationSection("streamers"));
+    }
+
+    /** Lo que llega de TikTok (en sus hilos) pasa al hilo principal, a la misma fila que Twitch. */
+    private void alHiloPrincipal(String jugador, Evento ev) {
+        if (!isEnabled()) {
+            return;
+        }
+        try {
+            getServer().getScheduler().runTask(this, () -> streamers.recibirDeTikTok(jugador, ev));
+        } catch (RuntimeException e) {
+            // El plugin se está apagando: el evento se pierde (TikTok no lo vuelve a mandar).
+        }
+    }
+
+    private void guardarTikTokActivo(boolean si) {
+        getConfig().set("tiktok.activo", si);
+        saveConfig();
     }
 
     @EventHandler

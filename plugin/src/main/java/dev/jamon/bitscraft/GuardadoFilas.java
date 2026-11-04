@@ -45,6 +45,7 @@ final class GuardadoFilas {
             e.addProperty("recompensa", ev.recompensa());
             e.addProperty("mensaje", ev.mensaje());
             e.addProperty("llegada", ev.llegada());
+            e.addProperty("cantidad", ev.cantidad());
             lista.add(e);
         }
         o.add("eventos", lista);
@@ -68,7 +69,8 @@ final class GuardadoFilas {
                         JsonObject e = el.getAsJsonObject();
                         f.agregar(new Evento(texto(e, "id"), Evento.Tipo.valueOf(e.get("tipo").getAsString()),
                                 texto(e, "canal_id"), texto(e, "usuario"), e.get("monto").getAsInt(),
-                                texto(e, "recompensa"), texto(e, "mensaje"), e.get("llegada").getAsLong()), maximo);
+                                texto(e, "recompensa"), texto(e, "mensaje"), e.get("llegada").getAsLong(),
+                                e.has("cantidad") ? e.get("cantidad").getAsInt() : 1), maximo);
                     }
                     f.tomarCambio();
                     m.put(id, f);

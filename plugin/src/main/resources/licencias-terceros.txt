@@ -1,0 +1,12 @@
+BitsCraftPlugin incluye dentro del jar estas librerías (para TikTok LIVE):
+
+- TikTokLiveJava 1.13.1 (Client, API) — jwdeveloper — MIT License
+  https://github.com/jwdeveloper/TikTokLiveJava
+- DepenDance 0.0.18 (Full, Injector, Decorator) — jwdeveloper — MIT License
+  https://github.com/jwdeveloper/DepenDance
+- Protocol Buffers (protobuf-java) 4.26.1 — Google — BSD 3-Clause License
+  https://github.com/protocolbuffers/protobuf
+- Java-WebSocket 1.5.5 — TooTallNate — MIT License
+  https://github.com/TooTallNate/Java-WebSocket
+
+TikTokLiveJava es una conexión no oficial a TikTok LIVE; no tiene relación con TikTok ni con ByteDance.

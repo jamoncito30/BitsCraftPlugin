@@ -235,8 +235,8 @@ final class Streamers {
 
     private void avisarRevincular(Player p) {
         p.sendMessage(Component.text("Tu canal de Twitch se desconectó del servidor. Escribe ", NamedTextColor.RED)
-                .append(Component.text("/twitch vincular", NamedTextColor.YELLOW)
-                        .clickEvent(ClickEvent.suggestCommand("/twitch vincular")))
+                .append(Component.text("/bits vincular", NamedTextColor.YELLOW)
+                        .clickEvent(ClickEvent.suggestCommand("/bits vincular")))
                 .append(Component.text(" para volver a conectarlo.", NamedTextColor.RED)));
     }
 
@@ -295,7 +295,7 @@ final class Streamers {
                 Bukkit.getScheduler().runTask(plugin, () -> {
                     Player q = Bukkit.getPlayer(id);
                     if (q != null) {
-                        q.sendMessage(Component.text("No se pudo vincular: " + motivo + ". Prueba de nuevo con /twitch vincular.", NamedTextColor.RED));
+                        q.sendMessage(Component.text("No se pudo vincular: " + motivo + ". Prueba de nuevo con /bits vincular.", NamedTextColor.RED));
                     }
                 });
             }
@@ -331,7 +331,7 @@ final class Streamers {
             });
             if (p != null) {
                 p.sendMessage(Component.text("El canal " + token.login() + " ya está vinculado a " + nombre(otro)
-                        + ". Que esa persona use /twitch desvincular primero.", NamedTextColor.RED));
+                        + ". Que esa persona use /bits desvincular primero.", NamedTextColor.RED));
             }
             return;
         }
@@ -428,14 +428,47 @@ final class Streamers {
         }
     }
 
+    /** Un evento de TikTok para el jugador {@code nombre} (hilo principal). */
+    void recibirDeTikTok(String nombre, Evento ev) {
+        Player p = Bukkit.getPlayerExact(nombre);
+        UUID j = p != null ? p.getUniqueId() : null;
+        if (j == null) {
+            OfflinePlayer o = Bukkit.getOfflinePlayerIfCached(nombre);
+            j = o == null ? null : o.getUniqueId();
+        }
+        if (j == null) {
+            log.info("TikTok: llegó un evento para " + nombre + ", pero ese jugador nunca entró al servidor; se descarta.");
+            return;
+        }
+        recibir(j, ev);
+    }
+
     /** Un evento para el streamer {@code j}: se pone en su fila, o solo se avisa si no hace nada. */
     void recibir(UUID j, Evento ev) {
-        Catalogo.Entrada e = catalogo.elegir(ev);
         Fila f = fila(j);
-        if (ev.tipo() == Evento.Tipo.FOLLOW && e != null && !f.tomarFollow(reloj.getAsLong(), catalogo.enfriamientoFollowMs())) {
+        if (ev.tipo() == Evento.Tipo.TIKTOK_LIKES) {
+            // Los likes llegan de a montones: se juntan y solo cuentan cada tiktok-likes.cada.
+            if (catalogo.elegir(ev) == null) {
+                return;
+            }
+            long juntos = f.sumarLikes(ev.monto(), catalogo.likesCada());
+            if (juntos == 0) {
+                return;
+            }
+            ev = new Evento(ev.id(), ev.tipo(), ev.canalId(), ev.usuario(), (int) Math.min(Integer.MAX_VALUE, juntos),
+                    null, null, ev.llegada());
+        }
+        Catalogo.Entrada e = catalogo.elegir(ev);
+        long enfriamiento = catalogo.enfriamientoMs(ev.tipo());
+        if (e != null && enfriamiento > 0 && !f.tomarEnfriamiento(ev.tipo(), reloj.getAsLong(), enfriamiento)) {
             e = null;
         }
         if (e == null) {
+            // Follows, shares y likes de TikTok sin acción no se anuncian: en un directo grande son miles.
+            if (ev.tipo() == Evento.Tipo.TIKTOK_FOLLOW || ev.tipo() == Evento.Tipo.TIKTOK_SHARE
+                    || ev.tipo() == Evento.Tipo.TIKTOK_LIKES) {
+                return;
+            }
             avisos.soloChat(nombre(j), ev);
             return;
         }
@@ -473,7 +506,7 @@ final class Streamers {
             if (e == null) {
                 continue;
             }
-            String canal = canal(j);
+            String canal = canal(j, ev);
             String nombreEntrada = Placeholders.aplicar(e.nombre(), Placeholders.de(p.getName(), ev, canal));
             avisos.mostrar(p, ev, nombreEntrada, ritmo.retardoAvisoMs());
             Bukkit.getScheduler().runTaskLater(plugin, () -> ejecutarAhora(j, f, ev), Math.max(0, ritmo.retardoAvisoMs() / 50));
@@ -496,7 +529,7 @@ final class Streamers {
             f.devolver(ev);
             return;
         }
-        Ejecutor.Resultado r = ejecutor.ejecutar(p, e, ev, canal(j));
+        Ejecutor.Resultado r = ejecutor.ejecutar(p, e, ev, canal(j, ev));
         if (r.mobsSaltados > 0) {
             p.sendMessage(Component.text(r.mobsSaltados + " mob(s) no aparecieron: ya tienes " + ritmo.mobsVivos()
                     + " mobs de donaciones encima.", NamedTextColor.GRAY));
@@ -522,8 +555,8 @@ final class Streamers {
         Fila f = filas.get(p.getUniqueId());
         if (f != null && f.tamano() > 0) {
             f.gracia(reloj.getAsLong() + ritmo.graciaMs());
-            p.sendMessage(Component.text("Tienes " + f.tamano() + " evento(s) de Twitch esperando"
-                    + (f.enPausa() ? " (estás en pausa: /twitch reanudar)." : "; empiezan en " + ritmo.graciaMs() / 1000 + " s."),
+            p.sendMessage(Component.text("Tienes " + f.tamano() + " evento(s) de tus directos esperando"
+                    + (f.enPausa() ? " (estás en pausa: /bits reanudar)." : "; empiezan en " + ritmo.graciaMs() / 1000 + " s."),
                     NamedTextColor.LIGHT_PURPLE));
         }
         Vinculo v = vinculos.get(p.getUniqueId());
@@ -539,6 +572,11 @@ final class Streamers {
             f.gracia(reloj.getAsLong() + ritmo.graciaMs());
         }
         guardarFilas(false);
+    }
+
+    /** El canal de donde vino el evento: el login de Twitch o el @ de TikTok. */
+    String canal(UUID j, Evento ev) {
+        return ev.plataforma() == Evento.Plataforma.TIKTOK ? ev.canalId() : canal(j);
     }
 
     String canal(UUID j) {
@@ -568,11 +606,10 @@ final class Streamers {
         List<String> l = new ArrayList<>();
         Vinculo v = vinculos.get(j);
         if (v == null) {
-            l.add("Canal: sin vincular (usa /twitch vincular)");
+            l.add("Twitch: sin vincular (usa /bits vincular)");
         } else {
-            l.add("Canal: " + v.token.login() + (v.token.mock() ? " (prueba)" : ""));
             ConexionEventSub c = v.conexion;
-            l.add("Conexión: " + (v.revincular ? "hay que volver a vincular" : c == null ? "iniciando" : c.estado()));
+            l.add("Twitch: " + v.token.login() + (v.token.mock() ? " (prueba)" : "") + " — " + (v.revincular ? "hay que volver a vincular" : c == null ? "iniciando" : c.estado()));
         }
         Fila f = filas.get(j);
         l.add("Fila: " + (f == null ? 0 : f.tamano()) + " evento(s)" + (f != null && f.enPausa() ? ", EN PAUSA" : ""));

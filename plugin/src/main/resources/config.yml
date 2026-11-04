@@ -12,6 +12,23 @@ twitch:
   url-api: https://api.twitch.tv/helix
   url-eventsub: wss://eventsub.wss.twitch.tv/ws
 
+# TikTok LIVE (conexión NO oficial, con la librería TikTokLiveJava y una clave de Euler Stream).
+# La clave va en plugins/BitsCraftPlugin/secretos.yml, nunca aquí. Ver README.
+tiktok:
+  activo: false
+  # Modo de prueba: no se conecta a internet ni necesita clave; los regalos se simulan con /bits tiktok simular.
+  prueba: false
+  # Un regalo sin entrada propia en catalogo.tiktok-regalos vale monedas × cantidad × esto, en bits.
+  bits-por-moneda: 1
+  # Si el streamer no está en vivo, cada cuánto se vuelve a mirar.
+  revisar-cada-segundos: 120
+
+# El @ de TikTok de cada streamer (por su nombre de Minecraft). Twitch no va aquí: se vincula con /bits vincular.
+# También se puede poner desde el juego: /bits tiktok cuenta <@usuario>
+streamers:
+  LONIUX: {tiktok: ""}
+  LionGGZ: {tiktok: ""}
+
 ritmo:
   # Segundos entre el aviso en pantalla y la acción, para que el streamer y su chat lo alcancen a ver.
   retardo-aviso-segundos: 3
@@ -48,12 +65,16 @@ avisos:
   mostrar-mensaje-bits: true
   titulo: "<light_purple><usuario>"
   subtitulo: "<gold><detalle></gold> <gray>»</gray> <white><nombre>"
-  chat: "<dark_gray>[<dark_purple>Twitch</dark_purple>]</dark_gray> <light_purple><usuario></light_purple> <gray>→</gray> <white><streamer></white><gray>:</gray> <gold><detalle></gold> <gray>(<nombre>)</gray>"
+  chat: "<plataforma> <light_purple><usuario></light_purple> <gray>→</gray> <white><streamer></white><gray>:</gray> <gold><detalle></gold> <gray>(<nombre>)</gray>"
   chat-mensaje-bits: "<dark_gray>  “<gray><mensaje></gray>”"
   # Para eventos que no hacen nada (raid chica, follow durante el enfriamiento).
-  chat-solo-aviso: "<dark_gray>[<dark_purple>Twitch</dark_purple>]</dark_gray> <light_purple><usuario></light_purple> <gray>→</gray> <white><streamer></white><gray>:</gray> <gold><detalle></gold>"
+  chat-solo-aviso: "<plataforma> <light_purple><usuario></light_purple> <gray>→</gray> <white><streamer></white><gray>:</gray> <gold><detalle></gold>"
   sonido: block.note_block.pling
   anonimo: "Anónimo"
+  # <plataforma> en el chat: de dónde vino el evento.
+  plataforma:
+    twitch: "<dark_gray>[<dark_purple>Twitch</dark_purple>]</dark_gray>"
+    tiktok: "<dark_gray>[<aqua>TikTok</aqua>]</dark_gray>"
   detalle:
     bits: "<monto> bits"
     sub: "se suscribió"
@@ -61,6 +82,10 @@ avisos:
     puntos: "canjeó «<recompensa>»"
     raid: "raid con <monto> personas"
     follow: "te sigue"
+    tiktok-regalo: "regaló <cantidad>× <recompensa>"
+    tiktok-follow: "te sigue en TikTok"
+    tiktok-share: "compartió el directo"
+    tiktok-likes: "<monto> likes"
 
 # ----------------------------------------------------------------------------------------------
 # CATÁLOGO: qué pasa con cada evento. Confirmado por LONIUX y LionGGZ el 2026-11-03.
@@ -89,7 +114,8 @@ avisos:
 #   sonido     sonido, volumen, tono       particulas  particula, cantidad      fuegos  cantidad
 #   comando    comando (lo corre la consola; {streamer} {usuario} {canal} {monto} {recompensa})
 #   aleatorio  opciones: lista de acciones, elige una
-# En "nombre" se puede usar {usuario}, {streamer}, {canal}, {monto} y {recompensa}.
+# En "nombre" se puede usar {usuario}, {streamer}, {canal}, {monto} y {recompensa}
+# (en TikTok: {recompensa} = el regalo, {monto} = monedas en total, {cantidad} = cuántos mandó).
 # ----------------------------------------------------------------------------------------------
 catalogo:
   bits:
@@ -277,3 +303,39 @@ catalogo:
     acciones:
       - {tipo: particulas, particula: heart, cantidad: 12}
       - {tipo: sonido, sonido: entity.player.levelup, volumen: 0.6, tono: 1.4}
+
+  # ---------------------------------------------------------------------------------------------
+  # TikTok LIVE. Los regalos se actúan una vez, cuando termina el combo (5 Rosas seguidas = 1 evento).
+  # 1) Si el regalo tiene entrada propia aquí (por su nombre en inglés, como lo manda TikTok), se usa esa.
+  #    Con como-bits: N, cada regalo cuenta como N bits y cae en los escalones de bits.
+  # 2) Si no, vale monedas × cantidad × tiktok.bits-por-moneda en bits (una Rosa = 1 moneda: no hace nada;
+  #    un León = 29.999: la nuke). FALTA que los creadores digan qué regalos quieren con nombre propio.
+  tiktok-regalos: {}
+  #   "Rose":
+  #     nombre: "Rosa"
+  #     acciones:
+  #       - {tipo: particulas, particula: heart, cantidad: 8}
+  #   "Finger Heart": {como-bits: 100}
+
+  # Follows, shares y likes de TikTok: apagados hasta que los creadores digan si hacen algo.
+  # Cuando están apagados (o en enfriamiento) no salen ni en el chat, porque en un directo grande son miles.
+  tiktok-follow:
+    activo: false
+    enfriamiento-segundos: 30
+    nombre: "Follow en TikTok"
+    acciones:
+      - {tipo: particulas, particula: heart, cantidad: 12}
+  tiktok-share:
+    activo: false
+    enfriamiento-segundos: 60
+    nombre: "Compartió el directo"
+    acciones:
+      - {tipo: fuegos, cantidad: 1}
+  tiktok-likes:
+    activo: false
+    # Los likes se juntan: la acción sale cada tantos likes (y como mucho una vez por enfriamiento).
+    cada: 500
+    enfriamiento-segundos: 60
+    nombre: "{monto} likes"
+    acciones:
+      - {tipo: dar, item: cookie, cantidad: 3}

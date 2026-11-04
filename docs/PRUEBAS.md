@@ -1,5 +1,38 @@
 # Qué se probó
 
+## 0.4.0 (2026-11-03): TikTok LIVE (E7)
+
+Librería: TikTokLiveJava 1.13.1 (+ DepenDance 0.0.18, protobuf-java 4.26.1, Java-WebSocket 1.5.5), bajadas
+de JitPack y Maven Central con el SHA-1 del repositorio verificado y el SHA-256 fijado en `scripts/compilar.sh`.
+
+- **JUnit: 47 pruebas** (20 nuevas en `TikTokTest`), corridas **sin la librería en el classpath**: regalo
+  por valor (Rosa 1 → nada, 10 Rosas → 10 bits, 5 Perfumes → 100, León → nuke), `bits-por-moneda`, regalo
+  con nombre propio antes que el valor, `como-bits × cantidad`, follow/share/likes apagados por defecto,
+  likes agrupados de a 500 con el resto guardado, enfriamientos por tipo (el follow de Twitch no comparte con
+  el de TikTok), la cantidad del combo guardada en la fila. Conexión con un conector falso: convierte regalos
+  (monedas × cantidad), descarta un id repetido, «esperando el directo» y vuelve a mirar a los 120 s,
+  espera creciente 10 → 20 → 40 → 80 → 160 → 300 → 300 s, reconecta si se corta, ignora lo que llega
+  por una conexión vieja o cerrada, y un `NoClassDefFoundError` solo apaga TikTok. Administrador: sin clave
+  queda apagado y crea `secretos.yml` vacío; la clave llega al conector pero **no aparece en `/bits estado`
+  ni en ningún log**; cuentas de config.yml normalizadas, las del comando las pisan y se guardan.
+- **Servidor local** (Paper 26.3, cliente LONIUX, `tiktok.prueba: true`, sin internet hacia TikTok):
+  `scripts/probar-catalogo.py` → **45 de 45** (las 37 de Twitch de siempre + 8 de TikTok: 4 por
+  `/bits probar-en … tiktok-regalo` y 4 por `/bits tiktok simular`, incluida **una de Twitch y TikTok a
+  la vez**: 3 creepers y 5 esqueletos + 2 strays, en orden). En el chat: «[TikTok] fan_de_prueba → LONIUX:
+  regaló 3× Doughnut (5 zombis)». `simular repetir` → el segundo con el mismo id no sale.
+  `simular cortar` → «se cortó; reconectando (de nuevo en 8 s)» y a los 10 s «conectado».
+  `simular romper` → «apagado: la librería de TikTok falló (NoClassDefFoundError). Twitch sigue
+  funcionando», y en ese momento `bits 10` por Twitch sacó sus 5 lepismas; `/bits tiktok recargar` lo
+  vuelve a conectar. Twitch real (jamoncito3_0) siguió «conectado (7/7 eventos)» todo el tiempo.
+- `secretos.yml`: ACL solo con el usuario de Windows (`icacls`).
+- Durante el desarrollo, una primera versión de `TikTokTest` cargó la librería real con una clave falsa
+  (intentó conectarse a @loniux); se corrigió con un conector inyectado y sacando la librería del
+  classpath de las pruebas.
+
+**Falta:** correr la librería de verdad (la sesión no tuvo permiso para ejecutar código de terceros:
+ni la prueba del modo sin conexión de la librería ni un directo real), la clave de Euler Stream y un
+directo de TikTok de 5 minutos (Rosa, un regalo con combo y Twitch al mismo tiempo).
+
 ## Vinculación real con Twitch (2026-11-02, 0.3.0)
 
 - App «BitsCraftPlugin» del usuario en dev.twitch.tv (cliente público). `/twitch vincular` desde el

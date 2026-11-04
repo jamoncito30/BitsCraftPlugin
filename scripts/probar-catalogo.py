@@ -2,7 +2,7 @@
 """Prueba todo el catálogo en el servidor de PRUEBA local, por RCON.
 
 Necesita el servidor de prueba arrancado y el cliente "LONIUX" conectado (scripts/cliente-prueba.py).
-Por cada entrada: borra los mobs, dispara /twitch probar-en LONIUX ..., espera el aviso y la acción,
+Por cada entrada: borra los mobs, dispara /bits probar-en LONIUX ... (o /bits tiktok simular), espera el aviso y la acción,
 y cuenta lo que apareció. Al final imprime un resumen. Solo para el servidor local.
   python scripts/probar-catalogo.py            todo
   python scripts/probar-catalogo.py bits       solo lo que empiece con "bits"
@@ -52,6 +52,16 @@ CASOS = [
     ("raid 2 (solo aviso)", "raid 2", {"zombie": 0}),
     ("raid 37", "raid 37", {"zombie": 3}),
     ("follow", "follow", {}),
+    # TikTok LIVE: monedas × cantidad = bits (tiktok.bits-por-moneda: 1). "!" = comando /bits tal cual.
+    ("tiktok Rose 1 (nada)", "tiktok-regalo Rose 1", {"silverfish": 0}),
+    ("tiktok 10 Rosas", "tiktok-regalo Rose 10", {"silverfish": 5}),
+    ("tiktok 5 Perfumes", "tiktok-regalo Perfume 5", {"skeleton": 5, "stray": 2}),
+    ("tiktok Lion", "tiktok-regalo Lion 1", {"tnt": 100}),
+    ("tiktok simulado Galaxy", "!tiktok simular LONIUX regalo Galaxy 1", {"vindicator": 1, "vex": 10}),
+    ("tiktok simulado 3 Doughnuts", "!tiktok simular LONIUX regalo Doughnut 3", {"zombie": 5}),
+    ("tiktok simulado follow (apagado)", "!tiktok simular LONIUX follow", {"zombie": 0}),
+    ("tiktok y twitch a la vez", ["probar-en LONIUX bits 600", "!tiktok simular LONIUX regalo Perfume 5"],
+     {"creeper": 3, "skeleton": 5, "stray": 2}),
 ]
 
 
@@ -207,8 +217,15 @@ def main(filtro):
         time.sleep(2.2)
         if nombre == "puntos Sin antorchas":
             r("give LONIUX torch 20")
-        r(f"twitch probar-en LONIUX {prueba}")
-        time.sleep(ESPERA)
+        pruebas = prueba if isinstance(prueba, list) else [prueba]
+        for p in pruebas:
+            if p.startswith("!"):
+                r("bits " + p[1:])
+            elif p.startswith("probar-en "):
+                r("bits " + p)
+            else:
+                r(f"bits probar-en LONIUX {p}")
+        time.sleep(ESPERA + 2.5 * (len(pruebas) - 1))
         problemas = []
         for mob, n in esperado.items():
             hay = contar(r, mob)

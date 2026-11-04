@@ -1,12 +1,15 @@
 # BitsCraftPlugin
 
-Plugin para servidores **Paper / Purpur 26.3** que conecta el canal de Twitch de cada streamer con su
-partida. Si alguien dona 600 bits en el canal de LONIUX, aparecen 3 creepers junto a LONIUX. También
-funciona con subs, subs regaladas, canjes de puntos del canal, raids y follows.
+Plugin para servidores **Paper / Purpur 26.3** que conecta el canal de Twitch y el directo de TikTok de
+cada streamer con su partida. Si alguien dona 600 bits en el canal de LONIUX, aparecen 3 creepers junto a
+LONIUX. También funciona con subs, subs regaladas, canjes de puntos del canal, raids y follows de Twitch, y
+con los **regalos de TikTok LIVE**. Twitch y TikTok disparan **a la vez**, en la misma fila del streamer.
+
+El comando es **`/bits`** (`/twitch` sigue funcionando igual).
 
 - Todo pasa en el servidor: **los streamers no instalan nada** en su PC (ni mods, ni OBS, ni overlays).
 - Pueden jugar **varios streamers a la vez**. Lo de cada canal le pasa solo a su streamer.
-- Es gratis: usa las herramientas oficiales de Twitch (EventSub).
+- Twitch es gratis y oficial (EventSub). TikTok **no tiene una forma oficial**: ver «TikTok LIVE» más abajo.
 
 ![Aviso en pantalla](docs/aviso-en-pantalla.png)
 
@@ -16,7 +19,7 @@ funciona con subs, subs regaladas, canjes de puntos del canal, raids y follows.
 
 ### Conectar tu canal (una sola vez)
 
-1. Entra al servidor y escribe **`/twitch vincular`**.
+1. Entra al servidor y escribe **`/bits vincular`**.
 2. Te sale en el chat **«Haz clic aquí para conectar tu canal de Twitch»**. Haz clic, entra con tu cuenta
    de Twitch y acepta. Si te pide un código, es el que sale en el chat.
 3. En unos segundos sale **«¡Listo! Tu canal quedó conectado»**.
@@ -28,13 +31,24 @@ y follows: no puede escribir en tu chat ni cambiar nada de tu canal.
 
 | Comando | Qué hace |
 |---|---|
-| `/twitch vincular` | Conecta tu canal |
-| `/twitch estado` | Muestra tu canal, si está conectado y cuántos eventos tienes en fila |
-| `/twitch pausa` | Para todo: lo que llegue se guarda (hasta 50) |
-| `/twitch reanudar` | Sigue con lo guardado, después de 10 s de respiro |
-| `/twitch desvincular` | Desconecta tu canal y le quita el permiso a la app en Twitch |
+| `/bits vincular` | Conecta tu canal |
+| `/bits estado` | Muestra tu canal de Twitch, tu cuenta de TikTok, si están conectados y cuántos eventos tienes en fila |
+| `/bits tiktok cuenta @tuusuario` | Conecta tu directo de TikTok (con `quitar` en vez del @, lo desconecta) |
+| `/bits pausa` | Para todo: lo que llegue se guarda (hasta 50) |
+| `/bits reanudar` | Sigue con lo guardado, después de 10 s de respiro |
+| `/bits desvincular` | Desconecta tu canal y le quita el permiso a la app en Twitch |
 
 Si te desconectas, lo que llegue mientras tanto también se guarda y sale al volver.
+
+### TikTok
+
+Escribe `/bits tiktok cuenta @tuusuario` una vez. Cuando empieces un directo en TikTok, el servidor se
+conecta solo (mira cada 2 minutos si ya estás en vivo). No hace falta que inicies sesión ni des permisos:
+el plugin lee el directo como lo vería cualquiera.
+
+Los regalos salen **cuando termina el combo** (si te mandan 5 Rosas seguidas, sale una sola vez, con las 5).
+Un regalo sin acción propia vale sus monedas en bits (1 moneda = 1 bit, se puede cambiar): una Rosa sola no
+hace nada, 10 Rosas son 5 lepismas y un León es la nuke.
 
 ### Recompensas de puntos del canal
 
@@ -84,18 +98,23 @@ Requisitos: Paper o Purpur **26.3** con Java 25. WorldGuard y GriefPrevention so
 
 | Comando | Qué hace |
 |---|---|
-| `/twitch probar <tipo> [monto o recompensa]` | Simula un evento sobre ti, sin Twitch. Tipos: `bits`, `sub`, `sub-regalo`, `puntos`, `raid`, `follow` |
-| `/twitch probar-en <jugador> <tipo> [monto o recompensa]` | Lo mismo, sobre otro jugador (sirve desde la consola) |
-| `/twitch estado <jugador>` | El estado de otro streamer |
-| `/twitch pausa <jugador>` · `/twitch reanudar <jugador>` | Freno de emergencia para otro streamer |
-| `/twitch vaciar <jugador>` | Borra la fila de un streamer |
-| `/twitch recargar` | Vuelve a leer `config.yml` (catálogo, límites, textos) sin reiniciar |
+| `/bits probar <tipo> [monto o recompensa]` | Simula un evento sobre ti, sin Twitch. Tipos: `bits`, `sub`, `sub-regalo`, `puntos`, `raid`, `follow`, `tiktok-regalo`, `tiktok-follow`, `tiktok-share`, `tiktok-likes` |
+| `/bits probar tiktok-regalo <Regalo> [cantidad] [monedas c/u]` | Un regalo de TikTok (nombre en inglés, con `_` en vez de espacios: `Finger_Heart`) |
+| `/bits tiktok activar` · `/bits tiktok desactivar` | Prende o apaga TikTok para todos (Twitch no se toca) |
+| `/bits tiktok recargar` | Vuelve a leer la clave de Euler y reconecta TikTok |
+| `/bits tiktok cuenta <@usuario> <jugador>` | Pone la cuenta de TikTok de otro streamer |
+| `/bits probar-en <jugador> <tipo> [monto o recompensa]` | Lo mismo, sobre otro jugador (sirve desde la consola) |
+| `/bits estado <jugador>` | El estado de otro streamer |
+| `/bits pausa <jugador>` · `/bits reanudar <jugador>` | Freno de emergencia para otro streamer |
+| `/bits vaciar <jugador>` | Borra la fila de un streamer |
+| `/bits recargar` | Vuelve a leer `config.yml` (catálogo, límites, textos) sin reiniciar |
 
-Ejemplos: `/twitch probar bits 600`, `/twitch probar puntos Mob sorpresa`, `/twitch probar-en LONIUX raid 37`.
+Ejemplos: `/bits probar bits 600`, `/bits probar puntos Mob sorpresa`, `/bits probar-en LONIUX raid 37`,
+`/bits probar-en LONIUX tiktok-regalo Rose 10`.
 
 ### Cambiar precios y acciones
 
-Todo está en `config.yml`, sección `catalogo`. Después de editar, usa `/twitch recargar`; si algo
+Todo está en `config.yml`, sección `catalogo`. Después de editar, usa `/bits recargar`; si algo
 está mal escrito (un mob o un ítem que no existe), la consola lo dice.
 
 Bits, subs y raids usan **escalones**: se elige el escalón más alto que no pase el monto. Con
@@ -190,11 +209,52 @@ Además:
 
 | Lo que pasa | Qué hacer |
 |---|---|
-| «Falta el client-id de Twitch» | Pega el Client ID en `config.yml` y usa `/twitch recargar` |
-| Al streamer le sale «Tu canal de Twitch se desconectó del servidor» | Pasa si quitó la app en Twitch o si el servidor estuvo apagado más de 30 días. Que use `/twitch vincular` otra vez |
-| No llegan bits o subs | Twitch solo tiene bits y subs en canales **afiliados o partner**. Revisa `/twitch estado`: debería decir «conectado (7/7 eventos)». Si no, la consola dice qué falló |
+| «Falta el client-id de Twitch» | Pega el Client ID en `config.yml` y usa `/bits recargar` |
+| Al streamer le sale «Tu canal de Twitch se desconectó del servidor» | Pasa si quitó la app en Twitch o si el servidor estuvo apagado más de 30 días. Que use `/bits vincular` otra vez |
+| No llegan bits o subs | Twitch solo tiene bits y subs en canales **afiliados o partner**. Revisa `/bits estado`: debería decir «conectado (7/7 eventos)». Si no, la consola dice qué falló |
 | No pasa nada con un canje de puntos | El título de la recompensa en Twitch tiene que ser igual al del catálogo |
 | La consola avisa «Catálogo: mob desconocido» | Hay un nombre mal escrito en `config.yml` |
+
+### TikTok LIVE
+
+TikTok **no tiene una API oficial** para los eventos de un directo. El plugin usa
+[TikTokLiveJava](https://github.com/jwdeveloper/TikTokLiveJava) (licencia MIT, va dentro del jar), que se
+conecta al directo público como un espectador más. Para eso necesita una clave de
+**[Euler Stream](https://www.eulerstream.com)**, un servicio que firma la conexión. Es ingeniería inversa:
+**puede dejar de andar cuando TikTok cambie algo**. Si pasa, Twitch sigue funcionando.
+
+**Encenderlo:**
+
+1. Crea una cuenta en [eulerstream.com](https://www.eulerstream.com) y copia tu **API key** (el plan gratis
+   tiene límites de conexiones por día; mira cuál te sirve).
+2. Abre `plugins/BitsCraftPlugin/secretos.yml` (el plugin lo crea vacío la primera vez) y pégala:
+   `euler-api-key: "tu-clave"`. **No la pegues en `config.yml`, en Discord ni en ningún chat.** Ese archivo
+   queda legible solo por el usuario que corre el servidor; el plugin nunca muestra la clave (solo dice
+   «configurada»).
+3. Pon el @ de cada streamer en `config.yml` → `streamers` (o que cada uno use `/bits tiktok cuenta @usuario`).
+4. `/bits tiktok activar` (o `tiktok.activo: true` y `/bits recargar`).
+
+**Regalos:** en `catalogo.tiktok-regalos` se le puede dar una acción propia a un regalo (por su nombre en
+inglés, como lo manda TikTok: `Rose`, `Finger Heart`, `Lion`...) o `como-bits: N`. Los que no están ahí
+valen `monedas × cantidad × tiktok.bits-por-moneda` bits y caen en los escalones de bits. Los follows,
+shares y likes de TikTok (`tiktok-follow`, `tiktok-share`, `tiktok-likes`) vienen **apagados**; los likes se
+juntan (`cada: 500`) y todos tienen enfriamiento.
+
+**Qué dice `/bits estado`:**
+
+| Mensaje | Qué significa |
+|---|---|
+| «conectado a @usuario (en vivo)» | Todo bien: los regalos llegan |
+| «esperando que empiece el directo» | No está en vivo; se vuelve a mirar cada `revisar-cada-segundos` |
+| «reconectando (de nuevo en N s)» | Se cortó o falló; reintenta con espera creciente (10 s → 5 min) |
+| «error de firma (¿clave mala o límite de Euler?)» | Revisa la clave en `secretos.yml` o el límite de tu plan de Euler |
+| «no existe la cuenta @usuario» | El @ está mal escrito |
+| «apagado: falta la clave de Euler Stream» | Falta `euler-api-key` en `secretos.yml` |
+| «apagado: la librería de TikTok falló» | TikTok cambió algo y la librería ya no sirve (ver abajo) |
+
+**Si TikTok deja de andar:** avisa al que mantiene el plugin. El arreglo suele ser subir TikTokLiveJava a su
+versión nueva en `scripts/compilar.sh` (versión y SHA-256), recompilar y cambiar el jar. Mientras tanto,
+`/bits tiktok desactivar` lo apaga sin tocar Twitch.
 
 ### Seguridad de los tokens
 
@@ -216,9 +276,14 @@ vincular. El plugin nunca escribe tokens en la consola ni en los logs.
 - `python scripts/cliente-prueba.py LONIUX`: abre un Minecraft 26.3 de prueba conectado como LONIUX.
 - `python scripts/probar-catalogo.py`: dispara todo el catálogo sobre LONIUX y revisa lo que aparece;
   `python scripts/probar-catalogo.py zonas` prueba las zonas protegidas.
+- TikTok sin internet ni clave: `tiktok.activo: true` y `tiktok.prueba: true` en el config del servidor de
+  prueba. Las cuentas «conectan» al instante y `/bits tiktok simular <jugador> regalo <Regalo> [cantidad]
+  [monedas]` (o `follow`, `share`, `likes <n>`, `repetir`, `cortar`, y `simular romper` para ver que solo se
+  apaga TikTok) manda lo mismo que mandaría un directo. Las pruebas JUnit corren **sin** la librería de TikTok
+  en el classpath, así que ninguna se conecta a TikTok.
 - `python scripts/twitch-mock.py servir`: un EventSub falso en `ws://127.0.0.1:8080/ws`. Con
   `twitch.url-eventsub: ws://127.0.0.1:8080/ws` y `twitch.url-api: http://127.0.0.1:8080` en el
-  config del servidor de prueba, `/twitch mock LONIUX 42 loniux` vincula un canal falso y
+  config del servidor de prueba, `/bits mock LONIUX 42 loniux` vincula un canal falso y
   `python scripts/twitch-mock.py disparar cheer 42 600` manda 600 bits.
 - Con la [Twitch CLI](https://github.com/twitchdev/twitch-cli) en vez del mock:
   `twitch event websocket start-server` y luego

@@ -22,7 +22,8 @@ final class Fila {
     private boolean pausa;
     private long graciaHasta;
     private long proximo;
-    private long ultimoFollow = Long.MIN_VALUE / 2;
+    private final Map<Evento.Tipo, Long> ultimos = new java.util.EnumMap<>(Evento.Tipo.class);
+    private long likes;
     private boolean cambio;
 
     /**
@@ -100,11 +101,28 @@ final class Fila {
 
     /** true si el follow puede hacer su efecto (y marca el enfriamiento). */
     boolean tomarFollow(long ahora, long enfriamiento) {
-        if (ahora - ultimoFollow < enfriamiento) {
+        return tomarEnfriamiento(Evento.Tipo.FOLLOW, ahora, enfriamiento);
+    }
+
+    /** true (y empieza a contar) si ya pasó el enfriamiento de ese tipo de evento para este streamer. */
+    boolean tomarEnfriamiento(Evento.Tipo tipo, long ahora, long enfriamiento) {
+        Long ultimo = ultimos.get(tipo);
+        if (ultimo != null && ahora - ultimo < enfriamiento) {
             return false;
         }
-        ultimoFollow = ahora;
+        ultimos.put(tipo, ahora);
         return true;
+    }
+
+    /**
+     * Suma likes de TikTok (llegan de a montones). Devuelve cuántos likes completos de {@code cada} se
+     * juntaron (0 si todavía no llega a {@code cada}); el resto queda guardado para la próxima vez.
+     */
+    long sumarLikes(long nuevos, int cada) {
+        likes += Math.max(0, nuevos);
+        long grupos = likes / cada;
+        likes -= grupos * cada;
+        return grupos * cada;
     }
 
     void pausar(boolean p) {

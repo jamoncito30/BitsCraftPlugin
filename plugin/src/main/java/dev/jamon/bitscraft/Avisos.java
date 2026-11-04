@@ -17,7 +17,7 @@ import java.util.Map;
 
 /**
  * El aviso de quién donó qué: título en la pantalla del streamer y una línea en el chat para todos.
- * Lo que viene de Twitch (nombres, mensajes, títulos de recompensas) entra como texto plano, así
+ * Lo que viene de Twitch o TikTok (nombres, mensajes, títulos de recompensas) entra como texto plano, así
  * que nadie puede meter formato ni etiquetas de MiniMessage.
  */
 final class Avisos {
@@ -33,6 +33,18 @@ final class Avisos {
     private final String anonimo;
     private final boolean mostrarMensaje;
     private final Map<Evento.Tipo, String> detalles = new EnumMap<>(Evento.Tipo.class);
+    private final Map<Evento.Plataforma, String> plataformas = new EnumMap<>(Evento.Plataforma.class);
+
+    /** Texto por defecto del detalle de cada tipo, si config.yml no lo trae. */
+    private static String detallePorDefecto(Evento.Tipo t) {
+        return switch (t) {
+            case TIKTOK_REGALO -> "regaló <cantidad>× <recompensa>";
+            case TIKTOK_FOLLOW -> "te sigue en TikTok";
+            case TIKTOK_SHARE -> "compartió el directo";
+            case TIKTOK_LIKES -> "<monto> likes";
+            default -> t.clave;
+        };
+    }
 
     Avisos(ConfigurationSection s) {
         if (s == null) {
@@ -40,16 +52,21 @@ final class Avisos {
         }
         titulo = s.getString("titulo", "<light_purple><usuario>");
         subtitulo = s.getString("subtitulo", "<gold><detalle></gold> <gray>»</gray> <white><nombre>");
-        chat = s.getString("chat", "<light_purple><usuario></light_purple> → <streamer>: <gold><detalle></gold> (<nombre>)");
+        chat = s.getString("chat", "<plataforma> <light_purple><usuario></light_purple> → <streamer>: <gold><detalle></gold> (<nombre>)");
         chatMensaje = s.getString("chat-mensaje-bits", "<gray>  “<mensaje>”");
-        chatSoloAviso = s.getString("chat-solo-aviso", "<light_purple><usuario></light_purple> → <streamer>: <gold><detalle>");
+        chatSoloAviso = s.getString("chat-solo-aviso", "<plataforma> <light_purple><usuario></light_purple> → <streamer>: <gold><detalle>");
         sonido = s.getString("sonido", "block.note_block.pling");
         anonimo = s.getString("anonimo", "Anónimo");
         mostrarMensaje = s.getBoolean("mostrar-mensaje-bits", false);
         ConfigurationSection d = s.getConfigurationSection("detalle");
         for (Evento.Tipo t : Evento.Tipo.values()) {
-            detalles.put(t, d == null ? t.clave : d.getString(t.clave, t.clave));
+            detalles.put(t, d == null ? detallePorDefecto(t) : d.getString(t.clave, detallePorDefecto(t)));
         }
+        ConfigurationSection pl = s.getConfigurationSection("plataforma");
+        plataformas.put(Evento.Plataforma.TWITCH, pl == null ? "<dark_gray>[<dark_purple>Twitch</dark_purple>]</dark_gray>"
+                : pl.getString("twitch", "<dark_gray>[<dark_purple>Twitch</dark_purple>]</dark_gray>"));
+        plataformas.put(Evento.Plataforma.TIKTOK, pl == null ? "<dark_gray>[<aqua>TikTok</aqua>]</dark_gray>"
+                : pl.getString("tiktok", "<dark_gray>[<aqua>TikTok</aqua>]</dark_gray>"));
     }
 
     private TagResolver valores(String streamer, Evento ev, String nombreEntrada) {
@@ -60,9 +77,11 @@ final class Avisos {
                 Placeholder.unparsed("monto", String.valueOf(ev.monto())),
                 Placeholder.unparsed("recompensa", ev.recompensa() == null ? "" : ev.recompensa()),
                 Placeholder.unparsed("mensaje", recortar(ev.mensaje(), 120)),
-                Placeholder.unparsed("nombre", nombreEntrada == null ? "" : nombreEntrada));
+                Placeholder.unparsed("nombre", nombreEntrada == null ? "" : nombreEntrada),
+                Placeholder.unparsed("cantidad", String.valueOf(ev.cantidad())));
         Component detalle = MM.deserialize(detalles.get(ev.tipo()), base);
-        return TagResolver.resolver(base, Placeholder.component("detalle", detalle));
+        return TagResolver.resolver(base, Placeholder.component("detalle", detalle),
+                Placeholder.component("plataforma", MM.deserialize(plataformas.get(ev.plataforma()))));
     }
 
     private static String recortar(String s, int max) {

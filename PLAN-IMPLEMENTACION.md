@@ -220,7 +220,14 @@ Diseño para que alcance con **abrir un puerto**:
 
 ---
 
-## E7 — TikTok LIVE (propuesta 2026-11-03, esperando visto bueno; no construir antes)
+## E7 — TikTok LIVE (aprobada 2026-11-03; construida en la 0.4.0)
+
+**Estado (2026-11-03):** construida con TikTokLiveJava **1.13.1** (octubre 2026, no la 1.8.11 que se vio al
+planear). Probada sin internet: JUnit (sin la librería en el classpath) y servidor local en modo de prueba
+(`tiktok.prueba: true` + `/bits tiktok simular`). Falta: correr la librería de verdad (la sesión no tuvo
+permiso para ejecutar código de terceros), la clave de Euler y un directo real. Cambios frente al plan:
+la cuenta se pone con `/bits tiktok cuenta <@usuario> [jugador]` (también `/bits tiktok <@usuario>`), y los
+follows/shares/likes de TikTok apagados o en enfriamiento no salen ni en el chat. Detalle en docs/PRUEBAS.md.
 
 **Pedido:** los creadores transmiten en Twitch y TikTok a la vez y quieren que **las dos audiencias
 disparen al mismo tiempo**. Aceptan usar algo no oficial («en caso de que falle, podemos ver qué hacer»).

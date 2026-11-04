@@ -3,8 +3,8 @@ package dev.jamon.bitscraft;
 import java.util.Map;
 
 /**
- * Reemplaza {streamer} {usuario} {canal} {monto} {recompensa} en nombres de mobs y comandos.
- * Lo que viene de Twitch se limpia a letras, números y _ (como los nombres de Twitch), para que
+ * Reemplaza {streamer} {usuario} {canal} {monto} {recompensa} {cantidad} en nombres de mobs y comandos.
+ * Lo que viene de Twitch o TikTok se limpia a letras, números y _ (como los nombres de Twitch), para que
  * nadie pueda meter texto en un comando de consola canjeando una recompensa con un título raro.
  */
 final class Placeholders {
@@ -35,6 +35,7 @@ final class Placeholders {
                 "usuario", ev.usuario() == null ? "Anonimo" : limpiar(ev.usuario()),
                 "canal", limpiar(canal),
                 "monto", String.valueOf(ev.monto()),
-                "recompensa", limpiar(ev.recompensa()));
+                "recompensa", limpiar(ev.recompensa()),
+                "cantidad", String.valueOf(ev.cantidad()));
     }
 }
